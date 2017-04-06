@@ -27,3 +27,6 @@
 *.exe
 *.out
 *.app
+
+# do not include the build directory
+build/
