@@ -54,8 +54,8 @@ void get_positive_number(int argc, char **argv, const int index,
       output = -1;
    } else {
       output = atoi(argv[index]);
-      if (!allow_zero && output == 0)
-         output = 0;
+      int min = allow_zero ? 0 : 1;
+      if (output < min) output = min - 1;
    }
 }
 

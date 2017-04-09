@@ -2,10 +2,12 @@
 #ifndef _SCENE_HPP
 #define _SCENE_HPP
 
-#include <vector>
-
+#include <glm/vec3.hpp>
 #include <scene/actors/actor.hpp>
 #include <scene/actors/camera.hpp>
+#include <vector>
+
+#define SCENE_ORIGIN glm::vec3(0, 0, 0)
 
 class Scene {
 public:
