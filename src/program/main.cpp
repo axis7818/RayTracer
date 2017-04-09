@@ -1,23 +1,17 @@
 #include <iostream>
+#include <stdlib.h>
 #include <string.h>
 
-#define PROGRAM_NAME "raytrace"
-
-#define MODE_RENDER "render"
-#define MODE_SCENEINFO "sceneinfo"
-#define MODE_PIXELRAY "pixelray"
-#define MODE_FIRSTHIT "firsthit"
-#define MODE_HELP "help"
+#include <scene/scene.hpp>
+#include <utils/parsing/parse.hpp>
+#include "help.hpp"
+#include "meta.hpp"
 
 using namespace std;
 
-static const size_t mode_count = 5;
-static const char *mode_names[] = {MODE_RENDER, MODE_SCENEINFO, MODE_PIXELRAY, MODE_FIRSTHIT, MODE_HELP};
-
-void print_help(const char *mode);
+int execute(const char *mode, int argc, char **argv);
 
 int main(int argc, char **argv) {
-   // header
    cout << "---- " << PROGRAM_NAME << " ----" << endl;
    cout << "Cameron Taylor" << endl << "CPE 473 Spring 2017" << endl;
 
@@ -30,7 +24,7 @@ int main(int argc, char **argv) {
    }
 
    // help?
-   if (!strcmp(mode, MODE_HELP)) {
+   else if (!strcmp(mode, MODE_HELP)) {
       const char *about = argv[2];
       if (!about)
          print_help(mode);
@@ -38,61 +32,53 @@ int main(int argc, char **argv) {
          print_help(about);
       return 0;
    }
+
+   // normal execution
+   else if (!strcmp(mode, MODE_RENDER) || !strcmp(mode, MODE_SCENEINFO)
+    || !strcmp(mode, MODE_PIXELRAY) || !strcmp(mode, MODE_FIRSTHIT)) {
+      // run in a specific mode after stripping the first two command line args
+      return execute(mode, argc - 2, argv + 2);
+   }
+
+   // default
+   else {
+      cout << "Unknown mode: " << mode << endl;
+      print_help(NULL);
+      return 1;
+   }
 }
 
-void print_help(const char *mode) {
-   cout << endl;
-   if (!mode) {
-      cout << "Usage: " << PROGRAM_NAME << " MODE" << endl;
-      cout << "Possible MODE values:" << endl;
-      for (size_t i = 0; i < mode_count; ++i) {
-         cout << "\t- " << mode_names[i] << endl;
-      }
-      cout << "Use the help mode for more info" << endl;
-      return;
+void get_positive_number(int argc, char **argv, const int index,
+ int &output, bool allow_zero) {
+   if (argc <= index) {
+      output = -1;
+   } else {
+      output = atoi(argv[index]);
+      if (!allow_zero && output == 0)
+         output = 0;
+   }
+}
+
+// mode should be known, and the following arguments should be:
+//    INPUT_FILE WIDTH HEIGHT X Y
+int execute(const char *mode, int argc, char **argv) {
+   int width, height, x, y;
+   get_positive_number(argc, argv, 1, width, false);
+   get_positive_number(argc, argv, 2, height, false);
+   get_positive_number(argc, argv, 3, x, true);
+   get_positive_number(argc, argv, 4, y, true);
+
+   cout << "width: " << width << endl;
+   cout << "height: " << height << endl;
+   cout << "x: " << x << endl;
+   cout << "y: " << y << endl;
+
+   // parse the scene
+   shared_ptr<Scene> scene = NULL;
+   if (argc > 0) {
+      cout << "parsing file: " << argv[0] << endl;
+      scene = parse_scene(argv[0]);
    }
 
-   else if (!strcmp(mode, MODE_RENDER)) {
-      cout << "Renders a scene to an image" << endl;
-      cout << "Usage: ./" << PROGRAM_NAME << " " << MODE_RENDER << " INPUT_FILE WIDTH HEIGHT" << endl;
-      cout << "\t- INPUT_FILE: the name of the povray (.pov) file to read and render" << endl;
-      cout << "\t- WIDTH:      image width" << endl;
-      cout << "\t- HEIGHT:     image height" << endl;
-      return;
-   }
-
-   else if (!strcmp(mode, MODE_SCENEINFO)) {
-      cout << "Provides a description of a scene .pov file" << endl;
-      cout << "Usage: ./" << PROGRAM_NAME << " " << MODE_SCENEINFO << " INPUT_FILE" << endl;
-      cout << "\t- INPUT_FILE: the name of the povray (.pov) file to read and describe" << endl;
-   }
-
-   else if (!strcmp(mode, MODE_PIXELRAY)) {
-      cout << "Prints out a single pixel's ray summary" << endl;
-      cout << "Usage: ./" << PROGRAM_NAME << " " << MODE_PIXELRAY << " INPUT_FILE WIDTH HEIGHT X Y" << endl;
-      cout << "\t- INPUT_FILE: the name of the povray (.pov) file" << endl;
-      cout << "\t- WIDTH:      image width" << endl;
-      cout << "\t- HEIGHT:     image height" << endl;
-      cout << "\t- X:          the x coordinate of the pixel" << endl;
-      cout << "\t- Y:          the y coordinate of the pixel" << endl;
-   }
-
-   else if (!strcmp(mode, MODE_FIRSTHIT)) {
-      cout << "Prints out a summary of the first object that a ray hits in the scene." << endl;
-      cout << "Usage: ./" << PROGRAM_NAME << " " << MODE_FIRSTHIT << " INPUT_FILE WIDTH HEIGHT X Y" << endl;
-      cout << "\t- INPUT_FILE: the name of the povray (.pov) file" << endl;
-      cout << "\t- WIDTH:      image width" << endl;
-      cout << "\t- HEIGHT:     image height" << endl;
-      cout << "\t- X:          the x coordinate of the pixel" << endl;
-      cout << "\t- Y:          the y coordinate of the pixel" << endl;
-   }
-
-   else {
-      cout << "For more help: ./" << PROGRAM_NAME << " " << MODE_HELP << " MODE" << endl;
-      cout << "Possible MODE values:" << endl;
-      for (size_t i = 0; i < mode_count - 1; ++i) {
-         cout << "\t- " << mode_names[i] << endl;
-      }
-      return;
-   }
+   return 0;
 }
