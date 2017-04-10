@@ -4,7 +4,7 @@
 
 #include <materials/finish.hpp>
 #include <materials/pigment.hpp>
-#include "actor.hpp"
+#include <scene/actors/actor.hpp>
 
 class Geometry: public Actor {
 public:

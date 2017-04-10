@@ -13,7 +13,7 @@ int execute(const char *mode, int argc, char **argv);
 
 int main(int argc, char **argv) {
    cout << "---- " << PROGRAM_NAME << " ----" << endl;
-   cout << "Cameron Taylor" << endl << "CPE 473 Spring 2017" << endl;
+   cout << "Cameron Taylor" << endl << "CPE 473 Spring 2017" << endl << endl;
 
    // mode
    const char *mode = argv[1];
@@ -76,8 +76,10 @@ int execute(const char *mode, int argc, char **argv) {
    // parse the scene
    shared_ptr<Scene> scene = NULL;
    if (argc > 0) {
-      cout << "parsing file: " << argv[0] << endl;
       scene = parse_scene(argv[0]);
+   } else {
+      cerr << "Please provide an input file" << endl;
+      exit(1);
    }
 
    return 0;

@@ -9,6 +9,10 @@
 class Camera: public Actor {
 public:
    Camera();
+   Camera(const Camera &other);
+   ~Camera();
+
+   Camera operator =(const Camera &other);
 
    glm::vec3 up;
    glm::vec3 right;
