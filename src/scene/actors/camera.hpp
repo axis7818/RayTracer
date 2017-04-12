@@ -3,6 +3,7 @@
 #define _CAMERA_HPP
 
 #include <glm/vec3.hpp>
+#include <iostream>
 
 #include "actor.hpp"
 

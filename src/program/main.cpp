@@ -7,9 +7,12 @@
 #include "help.hpp"
 #include "meta.hpp"
 
+#define SHOW_CMD_ARGS false
+
 using namespace std;
 
 int execute(const char *mode, int argc, char **argv);
+int scene_info(shared_ptr<Scene> scene);
 
 int main(int argc, char **argv) {
    cout << "---- " << PROGRAM_NAME << " ----" << endl;
@@ -68,19 +71,35 @@ int execute(const char *mode, int argc, char **argv) {
    get_positive_number(argc, argv, 3, x, true);
    get_positive_number(argc, argv, 4, y, true);
 
-   cout << "width: " << width << endl;
-   cout << "height: " << height << endl;
-   cout << "x: " << x << endl;
-   cout << "y: " << y << endl;
+   if (SHOW_CMD_ARGS) {
+      cout << "width: " << width << endl;
+      cout << "height: " << height << endl;
+      cout << "x: " << x << endl;
+      cout << "y: " << y << endl;
+   }
 
    // parse the scene
    shared_ptr<Scene> scene = NULL;
    if (argc > 0) {
-      scene = parse_scene(argv[0]);
+      try {
+         scene = parse_scene(argv[0]);
+      } catch (ParsingException &pe) {
+         cerr << pe.what() << endl;
+         exit(1);
+      }
    } else {
       cerr << "Please provide an input file" << endl;
       exit(1);
    }
 
+   if (!strcmp(mode, MODE_SCENEINFO)) {
+      return scene_info(scene);
+   }
+   
+   return 0;
+}
+
+int scene_info(shared_ptr<Scene> scene) {
+   scene->print();
    return 0;
 }

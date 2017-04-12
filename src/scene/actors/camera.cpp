@@ -3,6 +3,7 @@
 #include <scene/scene.hpp>
 
 using namespace glm;
+using namespace std;
 
 Camera::Camera() :
    up(vec3(0, 1, 0)), right(vec3(1.33333, 0, 0)), look_at(SCENE_ORIGIN)

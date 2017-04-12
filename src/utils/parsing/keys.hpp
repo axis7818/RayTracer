@@ -7,7 +7,7 @@
 #define SPHERE_KEY "sphere"
 #define PLANE_KEY "plane"
 
-#define LOCAITON_KEY "location"
+#define LOCATION_KEY "location"
 #define UP_KEY "up"
 #define RIGHT_KEY "right"
 #define LOOK_AT_KEY "look_at"

@@ -6,7 +6,8 @@
 #include "actor.hpp"
 
 class Light: public Actor {
-public:
+   public:
+
    RGBColor color;
 };
 
