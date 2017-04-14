@@ -11,7 +11,7 @@ class Plane: public Geometry {
 public:
    Plane();
 
-   virtual void print();
+   virtual void print() const;
 
    glm::vec3 normal;
    float distance;

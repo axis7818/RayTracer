@@ -41,7 +41,7 @@ shared_ptr<Scene> parse_scene(const char *filename) {
    shared_ptr<Scene> scene = make_shared<Scene>(filename);
 
    // open the file
-   cout << "Parsing file: " << filename << endl;
+   // cout << "Parsing file: " << filename << endl;
    ifstream scene_file(filename);
    if (!scene_file) {
       throw ParsingException("Could not open file to parse");

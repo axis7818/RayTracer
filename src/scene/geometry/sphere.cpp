@@ -6,7 +6,7 @@ Sphere::Sphere() :
    radius(1)
 {}
 
-void Sphere::print() {
+void Sphere::print() const {
    cout << "- Type: Sphere" << endl;
    cout << "- Center: ";
    print_vec3(this->position);

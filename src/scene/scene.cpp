@@ -6,7 +6,7 @@ Scene::Scene(const string filename) :
    filename(filename)
 {}
 
-void Scene::print() {
+void Scene::print() const {
    // camera
    cout << "Camera:" << endl;
    cout << "- Location: ";
@@ -43,4 +43,18 @@ void Scene::print() {
       actor->print();
       cout << endl;
    }
+}
+
+shared_ptr<Intersection> Scene::cast_ray(shared_ptr<Ray> ray) const {
+   shared_ptr<Intersection> test = NULL;
+   shared_ptr<Intersection> closest = NULL;
+
+   for (size_t i = 0; i < actors.size(); ++i) {
+      test = ray->intersects(actors[i]);
+      if (closest == NULL) {
+         closest = test;
+      }
+   }
+
+   return closest;
 }

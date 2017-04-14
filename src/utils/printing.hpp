@@ -4,7 +4,9 @@
 
 #include <glm/vec3.hpp>
 #include <iostream>
+#include <utils/color.hpp>
 
 void print_vec3(glm::vec3 v);
+void print_color(RGBColor color);
 
 #endif /* end of include guard: _PRINTING_HPP */

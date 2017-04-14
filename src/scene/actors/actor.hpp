@@ -10,7 +10,7 @@ class Actor {
 public:
    Actor();
 
-   virtual void print();
+   virtual void print() const;
 
    glm::vec3 position;
    glm::vec3 scale;

@@ -2,21 +2,32 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <rays/intersection.hpp>
 #include <scene/scene.hpp>
+#include <string>
 #include <utils/parsing/parse.hpp>
+#include <utils/stb_image_write.h>
 #include "help.hpp"
 #include "meta.hpp"
 
 #define SHOW_CMD_ARGS false
+#define SHOW_HEADER false
 
 using namespace std;
 
-int execute(const char *mode, int argc, char **argv);
-int scene_info(shared_ptr<Scene> scene);
+int prepare_execute(const char *mode, int argc, char **argv);
+int execute(const char *mode, const Scene &scene, const int width,
+ const int height, const int x, const int y);
+
+int render(const Scene &scene);
+int pixelray(const Scene &scene, const int x, const int y);
+int firsthit(const Scene &scene, const int x, const int y);
 
 int main(int argc, char **argv) {
-   cout << "---- " << PROGRAM_NAME << " ----" << endl;
-   cout << "Cameron Taylor" << endl << "CPE 473 Spring 2017" << endl << endl;
+   if (SHOW_HEADER) {
+      cout << "---- " << PROGRAM_NAME << " ----" << endl;
+      cout << "Cameron Taylor" << endl << "CPE 473 Spring 2017" << endl << endl;
+   }
 
    // mode
    const char *mode = argv[1];
@@ -40,7 +51,7 @@ int main(int argc, char **argv) {
    else if (!strcmp(mode, MODE_RENDER) || !strcmp(mode, MODE_SCENEINFO)
     || !strcmp(mode, MODE_PIXELRAY) || !strcmp(mode, MODE_FIRSTHIT)) {
       // run in a specific mode after stripping the first two command line args
-      return execute(mode, argc - 2, argv + 2);
+      return prepare_execute(mode, argc - 2, argv + 2);
    }
 
    // default
@@ -53,18 +64,18 @@ int main(int argc, char **argv) {
 
 void get_positive_number(int argc, char **argv, const int index,
  int &output, bool allow_zero) {
+   int min = allow_zero ? 0 : 1;
    if (argc <= index) {
-      output = -1;
+      output = min - 1;
    } else {
       output = atoi(argv[index]);
-      int min = allow_zero ? 0 : 1;
       if (output < min) output = min - 1;
    }
 }
 
 // mode should be known, and the following arguments should be:
 //    INPUT_FILE WIDTH HEIGHT X Y
-int execute(const char *mode, int argc, char **argv) {
+int prepare_execute(const char *mode, int argc, char **argv) {
    int width, height, x, y;
    get_positive_number(argc, argv, 1, width, false);
    get_positive_number(argc, argv, 2, height, false);
@@ -92,14 +103,117 @@ int execute(const char *mode, int argc, char **argv) {
       exit(1);
    }
 
+   return execute(mode, *scene, width, height, x, y);
+}
+
+int execute(const char *mode, const Scene &scene, const int width,
+ const int height, const int x, const int y) {
    if (!strcmp(mode, MODE_SCENEINFO)) {
-      return scene_info(scene);
+      scene.print();
+      return 0;
    }
-   
+
+   // these modes need a width and height
+   bool wh_good = true;
+   if (width <= 0) {
+      cerr << "Width must be at least 1" << endl;
+      wh_good = false;
+   }
+   if (height <= 0) {
+      cerr << "Height must be at least 1" << endl;
+      wh_good = false;
+   }
+   if (!wh_good)
+      return 1;
+   scene.camera->width = width;
+   scene.camera->height = height;
+
+   if (!strcmp(mode, MODE_RENDER)) {
+      return render(scene);
+   } else if (!strcmp(mode, MODE_FIRSTHIT) || !strcmp(mode, MODE_PIXELRAY)) {
+
+      // these modes need an x and y
+      bool xy_good = true;
+      if (x < 0 || x > width - 1) {
+         cerr << "x must be in range [0, width - 1]" << endl;
+         xy_good = false;
+      }
+      if (y < 0 || y > height - 1) {
+         cerr << "y must be in range [0, height - 1]" << endl;
+         xy_good = false;
+      }
+      if (!xy_good)
+         return 1;
+
+      if (!strcmp(mode, MODE_FIRSTHIT)) {
+         return firsthit(scene, x, y);
+      } else if (!strcmp(mode, MODE_PIXELRAY)) {
+         return pixelray(scene, x, y);
+      }
+
+   } else {
+      cerr << "UNKNOWN MODE!" << endl;
+   }
+   return 1;
+}
+
+int render(const Scene &scene) {
+   // cast the rays
+   for (int x = 0; x < scene.camera->width; ++x) {
+      for (int y = 0; y < scene.camera->height; ++y) {
+         shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
+         // TODO: check for intersections
+      }
+   }
+
+   // write out the image
    return 0;
 }
 
-int scene_info(shared_ptr<Scene> scene) {
-   scene->print();
+int firsthit(const Scene &scene, const int x, const int y) {
+   shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
+   shared_ptr<Intersection> intersection = scene.cast_ray(ray);
+
+   // check for no hit
+   if (intersection == NULL) {
+      cout << "No Hit" << endl;
+      return 0;
+   }
+
+   cout << "Pixel: [" << x << " " << y << "] Ray: ";
+   print_vec3(intersection->ray->source);
+   cout << " -> ";
+   print_vec3(intersection->ray->dir);
+   cout << endl << "T = " << intersection->t << endl;
+
+   bool is_geometry = false;
+   cout << "Object Type: ";
+   if (typeid(*intersection->target) == typeid(Sphere)) {
+      cout << "Sphere" << endl;
+      is_geometry = true;
+   } else if (typeid(*intersection->target) == typeid(Sphere)) {
+      cout << "Plane" << endl;
+      is_geometry = true;
+   }
+
+   if (is_geometry) {
+      print_color(static_pointer_cast<Geometry>(intersection->target)->pigment
+       .color);
+      cout << endl;
+   }
+
+   return 0;
+}
+
+int pixelray(const Scene &scene, const int x, const int y) {
+   shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
+   shared_ptr<Intersection> intersection = scene.cast_ray(ray);
+
+   cout << "Pixel: [" << x << " " << y << "] Ray: ";
+   print_vec3(intersection->ray->source);
+   cout << " -> ";
+   print_vec3(intersection->ray->dir);
+   cout << endl;
+
    return 0;
 }

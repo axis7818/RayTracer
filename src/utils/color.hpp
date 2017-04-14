@@ -7,7 +7,7 @@
 struct RGBColor {
    RGBColor() : r(1), g(1), b(1) {};
 
-   glm::vec3 to_vec3() { return glm::vec3(r, g, b); }
+   glm::vec3 to_vec3() const { return glm::vec3(r, g, b); }
    void from_vec3(glm::vec3 v) { r=v.x; g=v.y; b=v.z; }
 
    float r;
