@@ -174,9 +174,10 @@ int render(const Scene &scene) {
          unsigned char b = 0;
 
          if (intersection != NULL) {
-            r = intersection->target->pigment.color.r * 255;
-            g = intersection->target->pigment.color.g * 255;
-            b = intersection->target->pigment.color.b * 255;
+            RGBColor color = intersection->target->pigment.color;
+            r = (unsigned int)round(color.r * 255.f);
+            g = (unsigned int)round(color.g * 255.f);
+            b = (unsigned int)round(color.b * 255.f);
          }
 
          size_t index = scene.camera->width * 3 * (scene.camera->height -
