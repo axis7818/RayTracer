@@ -2,6 +2,7 @@
 #ifndef _HELP_HPP
 #define _HELP_HPP
 
+#include <cstring>
 #include <iostream>
 
 #include "meta.hpp"
