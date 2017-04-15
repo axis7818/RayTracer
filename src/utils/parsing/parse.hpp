@@ -16,6 +16,6 @@
 
 #define SHOW_FILE_CONTENTS false
 
-std::shared_ptr<Scene> parse_scene(const char *filename);
+std::shared_ptr<Scene> parse_scene(std::string filename);
 
 #endif /* end of include guard: _PARSE_HPP */

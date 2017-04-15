@@ -3,7 +3,7 @@
 using namespace glm;
 using namespace std;
 
-Intersection::Intersection(shared_ptr<Ray> ray, shared_ptr<Actor> target,
+Intersection::Intersection(shared_ptr<Ray> ray, shared_ptr<Geometry> target,
  float t) :
    ray(ray), target(target), t(t)
 {

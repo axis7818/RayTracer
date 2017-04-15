@@ -35,7 +35,7 @@ vector<char> read_pov_file(ifstream &file) {
    return data;
 }
 
-shared_ptr<Scene> parse_scene(const char *filename) {
+shared_ptr<Scene> parse_scene(string filename) {
    camera = NULL;
    actors.clear();
    shared_ptr<Scene> scene = make_shared<Scene>(filename);
@@ -43,7 +43,7 @@ shared_ptr<Scene> parse_scene(const char *filename) {
    // open the file
    // cout << "Parsing file: " << filename << endl;
    ifstream scene_file(filename);
-   if (!scene_file) {
+   if (!scene_file.is_open()) {
       throw ParsingException("Could not open file to parse");
    }
 

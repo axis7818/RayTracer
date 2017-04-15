@@ -20,10 +20,10 @@ void Scene::print() const {
    cout << endl;
    cout << "- Look at: ";
    print_vec3(this->camera->look_at);
-   cout << endl;
+   cout << endl << endl << "---" << endl;
 
    // lights
-   cout << endl << this->lights.size() << " light(s)" << endl;
+   cout << endl << this->lights.size() << " light(s)" << endl << endl;
    for (size_t i = 0; i < this->lights.size(); ++i) {
       shared_ptr<Light> light = this->lights[i];
       cout << "Light[" << i << "]:" << endl;
@@ -35,13 +35,14 @@ void Scene::print() const {
       cout << endl << endl;
    }
 
+   cout << "---" << endl << endl;
+
    // actors
    cout << this->actors.size() << " object(s)" << endl;
    for (size_t i = 0; i < this->actors.size(); ++i) {
       shared_ptr<Actor> actor = this->actors[i];
-      cout << "Object[" << i << "]:" << endl;
+      cout << endl << "Object[" << i << "]:" << endl;
       actor->print();
-      cout << endl;
    }
 }
 
@@ -50,8 +51,8 @@ shared_ptr<Intersection> Scene::cast_ray(shared_ptr<Ray> ray) const {
    shared_ptr<Intersection> closest = NULL;
 
    for (size_t i = 0; i < actors.size(); ++i) {
-      test = ray->intersects(actors[i]);
-      if (closest == NULL) {
+      test = ray->intersects(static_pointer_cast<Geometry>(actors[i]));
+      if (closest == NULL || (test != NULL && test->t < closest->t)) {
          closest = test;
       }
    }

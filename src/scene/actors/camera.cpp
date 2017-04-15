@@ -28,7 +28,7 @@ shared_ptr<Ray> Camera::make_ray(int x, int y) {
 
    // get the pixel's point in space, s (relative to the camera)
    vec3 us = ndc_x * this->right;
-   vec3 vs = ndc_y * cross(this->right, forward);
+   vec3 vs = ndc_y * normalize(cross(this->right, forward));
    vec3 ws = ndc_z * forward;
 
    return make_shared<Ray>(position, us + vs + ws);

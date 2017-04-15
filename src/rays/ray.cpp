@@ -7,33 +7,40 @@ using namespace std;
 Ray::Ray(vec3 cam_pos, vec3 to_pixel) :
    source(cam_pos), dir(normalize(to_pixel))
 {
-   min_t = length(to_pixel);
+   // IGNORE THIS FOR NOW
+   // min_t = length(to_pixel);
+   min_t = 0;
 }
 
-shared_ptr<Intersection> Ray::intersects(shared_ptr<Actor> actor) {
+shared_ptr<Intersection> Ray::intersects(shared_ptr<Geometry> geom) {
    float int_t;
 
    // Sphere intersection
-   if (typeid(*actor) == typeid(Sphere)) {
-      shared_ptr<vec2> t = intersects(static_pointer_cast<Sphere>(actor));
-      if (t == NULL) return NULL;
-      int_t = t->x < t->y ? t->x : t->y;
+   if (typeid(*geom) == typeid(Sphere)) {
+      shared_ptr<vec2> t = intersects(static_pointer_cast<Sphere>(geom));
+      if (t == NULL || (t->x < 0 && t->y < 0)) return NULL;
+      if (t->x < 0 && t->y >= 0)
+         int_t = t->y;
+      else if (t->x >= 0 && t->y < 0)
+         int_t = t->x;
+      else
+         int_t = t->x < t->y ? t->x : t->y;
    }
 
    // Plane intersection
-   else if (typeid(*actor) == typeid(Plane)) {
-      shared_ptr<float> t = intersects(static_pointer_cast<Plane>(actor));
-      if (t == NULL) return NULL;
+   else if (typeid(*geom) == typeid(Plane)) {
+      shared_ptr<float> t = intersects(static_pointer_cast<Plane>(geom));
+      if (t == NULL || *t < 0) return NULL;
       int_t = *t;
    }
 
    else {
-      cerr << "Unknown actor type for intersection..." << endl;
+      cerr << "Unknown geom type for intersection..." << endl;
       return NULL;
    }
 
    // make the intersection object
-   return make_shared<Intersection>(shared_from_this(), actor, int_t);
+   return make_shared<Intersection>(shared_from_this(), geom, int_t);
 }
 
 shared_ptr<vec2> Ray::intersects(shared_ptr<Sphere> sphere) {

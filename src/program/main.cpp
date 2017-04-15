@@ -6,9 +6,11 @@
 #include <scene/scene.hpp>
 #include <string>
 #include <utils/parsing/parse.hpp>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <utils/stb_image_write.h>
 #include "help.hpp"
 #include "meta.hpp"
+
 
 #define SHOW_CMD_ARGS false
 #define SHOW_HEADER false
@@ -93,7 +95,7 @@ int prepare_execute(const char *mode, int argc, char **argv) {
    shared_ptr<Scene> scene = NULL;
    if (argc > 0) {
       try {
-         scene = parse_scene(argv[0]);
+         scene = parse_scene(string("../resources/") + argv[0]);
       } catch (ParsingException &pe) {
          cerr << pe.what() << endl;
          exit(1);
@@ -158,15 +160,37 @@ int execute(const char *mode, const Scene &scene, const int width,
 }
 
 int render(const Scene &scene) {
+   unsigned char *data = new unsigned char[scene.camera->width *
+    scene.camera->height * 3];
+
    // cast the rays
    for (int x = 0; x < scene.camera->width; ++x) {
       for (int y = 0; y < scene.camera->height; ++y) {
          shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
-         // TODO: check for intersections
+         shared_ptr<Intersection> intersection = scene.cast_ray(ray);
+
+         unsigned char r = 0;
+         unsigned char g = 0;
+         unsigned char b = 0;
+
+         if (intersection != NULL) {
+            r = intersection->target->pigment.color.r * 255;
+            g = intersection->target->pigment.color.g * 255;
+            b = intersection->target->pigment.color.b * 255;
+         }
+
+         size_t index = scene.camera->width * 3 * (scene.camera->height -
+          1 - y) + 3 * x;
+         data[index + 0] = r;
+         data[index + 1] = g;
+         data[index + 2] = b;
       }
    }
 
    // write out the image
+   stbi_write_png("output.png", scene.camera->width, scene.camera->height, 3,
+    data, scene.camera->width * 3);
+   delete[] data;
    return 0;
 }
 
@@ -174,24 +198,24 @@ int firsthit(const Scene &scene, const int x, const int y) {
    shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
    shared_ptr<Intersection> intersection = scene.cast_ray(ray);
 
+   cout << "Pixel: [" << x << ", " << y << "] Ray: ";
+   print_vec3(ray->source);
+   cout << " -> ";
+   print_vec3(ray->dir);
+
    // check for no hit
    if (intersection == NULL) {
-      cout << "No Hit" << endl;
+      cout << endl << "No Hit" << endl;
       return 0;
    }
 
-   cout << "Pixel: [" << x << " " << y << "] Ray: ";
-   print_vec3(intersection->ray->source);
-   cout << " -> ";
-   print_vec3(intersection->ray->dir);
-   cout << endl << "T = " << intersection->t << endl;
-
    bool is_geometry = false;
+   cout << endl << "T = " << intersection->t << endl;
    cout << "Object Type: ";
    if (typeid(*intersection->target) == typeid(Sphere)) {
       cout << "Sphere" << endl;
       is_geometry = true;
-   } else if (typeid(*intersection->target) == typeid(Sphere)) {
+   } else if (typeid(*intersection->target) == typeid(Plane)) {
       cout << "Plane" << endl;
       is_geometry = true;
    }
@@ -207,12 +231,11 @@ int firsthit(const Scene &scene, const int x, const int y) {
 
 int pixelray(const Scene &scene, const int x, const int y) {
    shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
-   shared_ptr<Intersection> intersection = scene.cast_ray(ray);
 
-   cout << "Pixel: [" << x << " " << y << "] Ray: ";
-   print_vec3(intersection->ray->source);
+   cout << "Pixel: [" << x << ", " << y << "] Ray: ";
+   print_vec3(ray->source);
    cout << " -> ";
-   print_vec3(intersection->ray->dir);
+   print_vec3(ray->dir);
    cout << endl;
 
    return 0;
