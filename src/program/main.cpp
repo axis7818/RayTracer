@@ -95,7 +95,7 @@ int prepare_execute(const char *mode, int argc, char **argv) {
    shared_ptr<Scene> scene = NULL;
    if (argc > 0) {
       try {
-         scene = parse_scene(string("../resources/") + argv[0]);
+         scene = parse_scene(argv[0]);
       } catch (ParsingException &pe) {
          cerr << pe.what() << endl;
          exit(1);
