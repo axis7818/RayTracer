@@ -7,6 +7,10 @@ Plane::Plane() :
    normal(0, 1, 0), distance(0)
 {}
 
+vec3 Plane::get_normal(vec3 point) {
+   return normalize(this->normal);
+}
+
 void Plane::print() const {
    cout << "- Type: Plane" << endl;
    cout << "- Normal: ";

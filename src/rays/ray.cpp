@@ -4,13 +4,9 @@
 using namespace glm;
 using namespace std;
 
-Ray::Ray(vec3 cam_pos, vec3 to_pixel) :
-   source(cam_pos), dir(normalize(to_pixel))
-{
-   // IGNORE THIS FOR NOW
-   // min_t = length(to_pixel);
-   min_t = 0;
-}
+Ray::Ray(vec3 cam_pos, vec3 to_pixel, float min_t) :
+   source(cam_pos), dir(normalize(to_pixel)), min_t(min_t)
+{}
 
 shared_ptr<Intersection> Ray::intersects(shared_ptr<Geometry> geom) {
    float int_t;
@@ -18,10 +14,10 @@ shared_ptr<Intersection> Ray::intersects(shared_ptr<Geometry> geom) {
    // Sphere intersection
    if (typeid(*geom) == typeid(Sphere)) {
       shared_ptr<vec2> t = intersects(static_pointer_cast<Sphere>(geom));
-      if (t == NULL || (t->x < 0 && t->y < 0)) return NULL;
-      if (t->x < 0 && t->y >= 0)
+      if (t == NULL || (t->x < min_t && t->y < min_t)) return NULL;
+      if (t->x < min_t && t->y >= min_t)
          int_t = t->y;
-      else if (t->x >= 0 && t->y < 0)
+      else if (t->x >= min_t && t->y < min_t)
          int_t = t->x;
       else
          int_t = t->x < t->y ? t->x : t->y;
@@ -29,9 +25,10 @@ shared_ptr<Intersection> Ray::intersects(shared_ptr<Geometry> geom) {
 
    // Plane intersection
    else if (typeid(*geom) == typeid(Plane)) {
-      shared_ptr<float> t = intersects(static_pointer_cast<Plane>(geom));
-      if (t == NULL || *t < 0) return NULL;
-      int_t = *t;
+      float t = min_t - 1;
+      if (!intersects(static_pointer_cast<Plane>(geom), t) || t < min_t)
+         return NULL;
+      int_t = t;
    }
 
    else {
@@ -59,14 +56,15 @@ shared_ptr<vec2> Ray::intersects(shared_ptr<Sphere> sphere) {
    return make_shared<vec2>(t1, t2);
 }
 
-shared_ptr<float> Ray::intersects(shared_ptr<Plane> plane) {
+bool Ray::intersects(shared_ptr<Plane> plane, float &t) {
    float den = dot(dir, plane->normal);
 
    // parallel to the plane, no or infinity intersections
-   if (den == 0) return NULL;
+   if (den == 0) return false;
 
    float num = plane->distance - dot(source, plane->normal);
-   return make_shared<float>(num / den);
+   t = num / den;
+   return true;
 }
 
 vec3 Ray::point_at(float t) const {

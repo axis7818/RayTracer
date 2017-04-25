@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <lighting/lighting.hpp>
 #include <rays/intersection.hpp>
 #include <scene/scene.hpp>
 #include <string>
 #include <utils/parsing/parse.hpp>
+#include <utils/color.hpp>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <utils/stb_image_write.h>
 #include "help.hpp"
@@ -19,11 +21,13 @@ using namespace std;
 
 int prepare_execute(const char *mode, int argc, char **argv);
 int execute(const char *mode, const Scene &scene, const int width,
- const int height, const int x, const int y);
+ const int height, const int x, const int y, const bool use_alt_brdf);
 
-int render(const Scene &scene);
+int render(const Scene &scene, const bool use_alt_brdf);
 int pixelray(const Scene &scene, const int x, const int y);
 int firsthit(const Scene &scene, const int x, const int y);
+int pixelcolor(const Scene &scene, const int x, const int y,
+ const bool use_alt_brdf);
 
 int main(int argc, char **argv) {
    if (SHOW_HEADER) {
@@ -51,7 +55,8 @@ int main(int argc, char **argv) {
 
    // normal execution
    else if (!strcmp(mode, MODE_RENDER) || !strcmp(mode, MODE_SCENEINFO)
-    || !strcmp(mode, MODE_PIXELRAY) || !strcmp(mode, MODE_FIRSTHIT)) {
+    || !strcmp(mode, MODE_PIXELRAY) || !strcmp(mode, MODE_FIRSTHIT)
+    || !strcmp(mode, MODE_PIXELCOLOR)) {
       // run in a specific mode after stripping the first two command line args
       return prepare_execute(mode, argc - 2, argv + 2);
    }
@@ -75,6 +80,13 @@ void get_positive_number(int argc, char **argv, const int index,
    }
 }
 
+bool using_alt_brdf(int argc, char **argv) {
+   for (size_t i = 0; i < argc; ++i)
+      if (!strcmp(ALT_BRDF_FLAG, argv[i]))
+         return true;
+   return false;
+}
+
 // mode should be known, and the following arguments should be:
 //    INPUT_FILE WIDTH HEIGHT X Y
 int prepare_execute(const char *mode, int argc, char **argv) {
@@ -83,12 +95,14 @@ int prepare_execute(const char *mode, int argc, char **argv) {
    get_positive_number(argc, argv, 2, height, false);
    get_positive_number(argc, argv, 3, x, true);
    get_positive_number(argc, argv, 4, y, true);
+   bool use_alt_brdf = using_alt_brdf(argc, argv);
 
    if (SHOW_CMD_ARGS) {
       cout << "width: " << width << endl;
       cout << "height: " << height << endl;
       cout << "x: " << x << endl;
       cout << "y: " << y << endl;
+      cout << "altbrdf: " << (use_alt_brdf ? "true" : "false") << endl;
    }
 
    // parse the scene
@@ -105,11 +119,11 @@ int prepare_execute(const char *mode, int argc, char **argv) {
       exit(1);
    }
 
-   return execute(mode, *scene, width, height, x, y);
+   return execute(mode, *scene, width, height, x, y, use_alt_brdf);
 }
 
 int execute(const char *mode, const Scene &scene, const int width,
- const int height, const int x, const int y) {
+ const int height, const int x, const int y, const bool use_alt_brdf) {
    if (!strcmp(mode, MODE_SCENEINFO)) {
       scene.print();
       return 0;
@@ -131,8 +145,9 @@ int execute(const char *mode, const Scene &scene, const int width,
    scene.camera->height = height;
 
    if (!strcmp(mode, MODE_RENDER)) {
-      return render(scene);
-   } else if (!strcmp(mode, MODE_FIRSTHIT) || !strcmp(mode, MODE_PIXELRAY)) {
+      return render(scene, use_alt_brdf);
+   } else if (!strcmp(mode, MODE_FIRSTHIT) || !strcmp(mode, MODE_PIXELRAY)
+    || !strcmp(mode, MODE_PIXELCOLOR)) {
 
       // these modes need an x and y
       bool xy_good = true;
@@ -151,6 +166,8 @@ int execute(const char *mode, const Scene &scene, const int width,
          return firsthit(scene, x, y);
       } else if (!strcmp(mode, MODE_PIXELRAY)) {
          return pixelray(scene, x, y);
+      } else if (!strcmp(mode, MODE_PIXELCOLOR)) {
+         return pixelcolor(scene, x, y, use_alt_brdf);
       }
 
    } else {
@@ -159,7 +176,7 @@ int execute(const char *mode, const Scene &scene, const int width,
    return 1;
 }
 
-int render(const Scene &scene) {
+int render(const Scene &scene, const bool use_alt_brdf) {
    unsigned char *data = new unsigned char[scene.camera->width *
     scene.camera->height * 3];
 
@@ -174,10 +191,16 @@ int render(const Scene &scene) {
          unsigned char b = 0;
 
          if (intersection != NULL) {
-            RGBColor color = intersection->target->pigment.color;
+            // RGBColor color = intersection->target->pigment.color;
+            RGBColor color;
+            if (use_alt_brdf)
+               color = cook_torrance(make_shared<Scene>(scene), intersection);
+            else
+               color = blinn_phong(make_shared<Scene>(scene), intersection);
             r = (unsigned int)round(color.r * 255.f);
             g = (unsigned int)round(color.g * 255.f);
             b = (unsigned int)round(color.b * 255.f);
+            // cout << "r: " << (int)r << ", g: " << (int)g << ", b: " << (int)b << endl;
          }
 
          size_t index = scene.camera->width * 3 * (scene.camera->height -
@@ -238,6 +261,48 @@ int pixelray(const Scene &scene, const int x, const int y) {
    cout << " -> ";
    print_vec3(ray->dir);
    cout << endl;
+
+   return 0;
+}
+
+int pixelcolor(const Scene &scene, const int x, const int y,
+ const bool use_alt_brdf) {
+   shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
+   shared_ptr<Intersection> intersection = scene.cast_ray(ray);
+
+   RGBColor color;
+   if (use_alt_brdf)
+      color = cook_torrance(make_shared<Scene>(scene), intersection);
+   else
+      color = blinn_phong(make_shared<Scene>(scene), intersection);
+
+   cout << "Pixel: [" << x << " " << y << "] Ray: ";
+   print_vec3(ray->source);
+   cout << " -> ";
+   print_vec3(ray->dir);
+   cout << endl;
+
+   if (intersection == NULL) {
+      cout << "No Hit" << endl;
+      return 0;
+   }
+
+   bool is_geometry = false;
+   cout << "T = " << intersection->t << endl;
+   cout << "Object Type: ";
+   if (typeid(*intersection->target) == typeid(Sphere)) {
+      cout << "Sphere" << endl;
+      is_geometry = true;
+   } else if (typeid(*intersection->target) == typeid(Plane)) {
+      cout << "Plane" << endl;
+      is_geometry = true;
+   }
+
+   cout << "BRDF: " << (use_alt_brdf ? "Alternate" : "Blinn-Phong") << endl;
+   if (is_geometry) {
+      cout << "Color: (" << (int)(color.r * 255) << ", "
+       << (int)(color.g * 255) << ", " << (int)(color.b * 255) << ")" << endl;
+   }
 
    return 0;
 }

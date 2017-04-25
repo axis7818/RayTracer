@@ -2,6 +2,7 @@
 #ifndef _ELEMENT_PARSING_HPP
 #define _ELEMENT_PARSING_HPP
 
+#include <algorithm>
 #include <fstream>
 #include <glm/vec3.hpp>
 #include <iostream>

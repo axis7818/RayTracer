@@ -16,20 +16,20 @@ vec3 Camera::get_w() {
    return normalize(this->position - this->look_at);
 }
 
-shared_ptr<Ray> Camera::make_ray(int x, int y) {
-   x = x < 0 ? 0 : x > this->width - 1 ? this->width - 1 : x;
-   y = y < 0 ? 0 : y > this->height - 1 ? this->height - 1 : y;
-   vec3 forward = -get_w();
+shared_ptr<Ray> Camera::make_ray(int i, int j) {
+   // clamp to within the view bounds
+   i = i < 0 ? 0 : i > this->width - 1 ? this->width - 1 : i;
+   j = j < 0 ? 0 : j > this->height - 1 ? this->height - 1 : j;
 
-   // normalized device coordinates from (0, 0) to (1, 1)
-   float ndc_x = -0.5f + (x + 0.5f) / this->width;
-   float ndc_y = -0.5f + (y + 0.5f) / this->height;
-   float ndc_z = 1;
+   // determine viewspace coordinates (between 0 and 1)
+   float u_s = (i + 0.5f) / this->width - 0.5f;
+   float v_s = (j + 0.5f) / this->height - 0.5f;
+   float w_s = -1; // focal length is always -1 since it provides reasonable results
 
-   // get the pixel's point in space, s (relative to the camera)
-   vec3 us = ndc_x * this->right;
-   vec3 vs = ndc_y * normalize(cross(this->right, forward));
-   vec3 ws = ndc_z * forward;
+   // vector from the camera's location to the pixel in world space
+   vec3 w = get_w();
+   vec3 to_pixel = u_s * this->right + v_s * normalize(cross(this->right, -w)) + w_s * w;
+   // vec3 to_pixel = u_s * this->right + v_s * this->up + w_s * w;
 
-   return make_shared<Ray>(position, us + vs + ws);
+   return make_shared<Ray>(position, to_pixel, 0);
 }

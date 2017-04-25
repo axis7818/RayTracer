@@ -1,10 +1,15 @@
 #include "sphere.hpp"
 
+using namespace glm;
 using namespace std;
 
 Sphere::Sphere() :
    radius(1)
 {}
+
+vec3 Sphere::get_normal(vec3 point) {
+   return normalize(point - this->position);
+}
 
 void Sphere::print() const {
    cout << "- Type: Sphere" << endl;

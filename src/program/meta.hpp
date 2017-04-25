@@ -8,7 +8,10 @@
 #define MODE_SCENEINFO "sceneinfo"
 #define MODE_PIXELRAY "pixelray"
 #define MODE_FIRSTHIT "firsthit"
+#define MODE_PIXELCOLOR "pixelcolor"
 #define MODE_HELP "help"
+
+#define ALT_BRDF_FLAG "-altbrdf"
 
 static const unsigned int mode_count = 5;
 static const char *mode_names[] = {

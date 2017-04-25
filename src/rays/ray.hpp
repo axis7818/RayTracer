@@ -13,11 +13,11 @@ class Intersection;
 
 class Ray: public std::enable_shared_from_this<Ray> {
 public:
-   Ray(glm::vec3 cam_pos, glm::vec3 to_pixel);
+   Ray(glm::vec3 cam_pos, glm::vec3 to_pixel, float min_t);
 
    std::shared_ptr<Intersection> intersects(std::shared_ptr<Geometry> geometry);
    std::shared_ptr<glm::vec2> intersects(std::shared_ptr<Sphere> sphere);
-   std::shared_ptr<float> intersects(std::shared_ptr<Plane> plane);
+   bool intersects(std::shared_ptr<Plane> plane, float &t);
    glm::vec3 point_at(float t) const;
 
    glm::vec3 source;
