@@ -276,7 +276,7 @@ int pixelcolor(const Scene &scene, const int x, const int y,
    else
       color = blinn_phong(make_shared<Scene>(scene), intersection);
 
-   cout << "Pixel: [" << x << " " << y << "] Ray: ";
+   cout << "Pixel: [" << x << ", " << y << "] Ray: ";
    print_vec3(ray->source);
    cout << " -> ";
    print_vec3(ray->dir);
@@ -300,8 +300,11 @@ int pixelcolor(const Scene &scene, const int x, const int y,
 
    cout << "BRDF: " << (use_alt_brdf ? "Alternate" : "Blinn-Phong") << endl;
    if (is_geometry) {
-      cout << "Color: (" << (int)(color.r * 255) << ", "
-       << (int)(color.g * 255) << ", " << (int)(color.b * 255) << ")" << endl;
+      unsigned int r = (unsigned int)round(color.r * 255.f);
+      unsigned int g = (unsigned int)round(color.g * 255.f);
+      unsigned int b = (unsigned int)round(color.b * 255.f);
+
+      cout << "Color: (" << r << ", " << g << ", " << b << ")" << endl;
    }
 
    return 0;
