@@ -3,6 +3,7 @@
 #define _LIGHTING_HPP
 
 #include <algorithm>
+#include <glm/common.hpp>
 #include <glm/geometric.hpp>
 #include <glm/vec3.hpp>
 #include <memory>

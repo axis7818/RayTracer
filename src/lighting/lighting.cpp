@@ -14,6 +14,7 @@ RGBColor blinn_phong(shared_ptr<Scene> scene,
    float k_s = intersection->target->finish.specular;
    float shine = (2.0f / pow(intersection->target->finish.roughness, 2)) - 2.0f;
 
+   vec3 obj_color = intersection->target->pigment.color.to_vec3();
    vec3 ambient = k_a * intersection->target->pigment.color.to_vec3();
    vec3 diffuse = vec3(0, 0, 0);
    vec3 specular = vec3(0, 0, 0);
@@ -34,13 +35,11 @@ RGBColor blinn_phong(shared_ptr<Scene> scene,
        shadow_ray);
       if (shadow_intersection != NULL) continue;
 
-      float N_dot_L = dot(N, L);
-      if (N_dot_L > 0)
-         diffuse += k_d * N_dot_L * lc;
+      float N_dot_L = glm::max(dot(N, L), 0.f);
+      diffuse += k_d * N_dot_L * lc * obj_color;
 
-      float H_dot_N = dot(H, N);
-      if (H_dot_N > 0)
-         specular += k_s * pow(H_dot_N, shine) * lc;
+      float H_dot_N = glm::max(dot(H, N), 0.f);
+      specular += k_s * pow(H_dot_N, shine) * lc * obj_color;
    }
 
    vec3 color = ambient + diffuse + specular;
@@ -57,9 +56,10 @@ RGBColor cook_torrance(shared_ptr<Scene> scene,
 
    float k_a = intersection->target->finish.ambient;
    float k_d = intersection->target->finish.diffuse;
-   float a = 0.3;    // assume for now, might come in with the .pov file
+   float a = 0.3f;    // assume for now, might come in with the .pov file
    float n = 1.0f;   // assume for now, might come in with the .pov file
 
+   vec3 obj_color = intersection->target->pigment.color.to_vec3();
    vec3 ambient = k_a * intersection->target->pigment.color.to_vec3();
    vec3 diffuse = vec3(0, 0, 0);
    vec3 specular = vec3(0, 0, 0);
@@ -88,7 +88,7 @@ RGBColor cook_torrance(shared_ptr<Scene> scene,
          if (N_dot_L <= 0)
             continue;
 
-         float s = 0.2;       // assume for now, might come in with the .pov file
+         float s = 0.2f;       // assume for now, might come in with the .pov file
          float d = 1.0f - s;  // assume for now, might come in with the .pov file
 
          float D = pow(H_dot_N / (M_PI * a * a), (2.0f / (a * a)) - 2.0f);
@@ -101,8 +101,8 @@ RGBColor cook_torrance(shared_ptr<Scene> scene,
          float r_d = k_d;
          float r_s = D * G * F / (4.0f * N_dot_V);
 
-         diffuse += N_dot_L * d * r_d * lc;
-         specular += s * r_s * lc;
+         diffuse += N_dot_L * d * r_d * lc * obj_color;
+         specular += s * r_s * lc * obj_color;
       }
    }
 
