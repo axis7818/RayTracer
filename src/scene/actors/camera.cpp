@@ -31,5 +31,5 @@ shared_ptr<Ray> Camera::make_ray(int i, int j) {
    vec3 to_pixel = u_s * this->right + v_s * normalize(cross(this->right, -w)) + w_s * w;
    // vec3 to_pixel = u_s * this->right + v_s * this->up + w_s * w;
 
-   return make_shared<Ray>(position, to_pixel, 0);
+   return make_shared<Ray>(position, to_pixel, 0, -1);
 }

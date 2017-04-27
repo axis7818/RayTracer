@@ -4,8 +4,8 @@
 using namespace glm;
 using namespace std;
 
-Ray::Ray(vec3 cam_pos, vec3 to_pixel, float min_t) :
-   source(cam_pos), dir(normalize(to_pixel)), min_t(min_t)
+Ray::Ray(vec3 cam_pos, vec3 to_pixel, float min_t, float max_t) :
+   source(cam_pos), dir(normalize(to_pixel)), min_t(min_t), max_t(max_t)
 {}
 
 shared_ptr<Intersection> Ray::intersects(shared_ptr<Geometry> geom) {
@@ -13,21 +13,41 @@ shared_ptr<Intersection> Ray::intersects(shared_ptr<Geometry> geom) {
 
    // Sphere intersection
    if (typeid(*geom) == typeid(Sphere)) {
+      // TODO: implement this with a max value
+      // shared_ptr<vec2> t = intersects(static_pointer_cast<Sphere>(geom));
+      // if (t == NULL || (t->x < min_t && t->y < min_t)) return NULL;
+      // if (t->x < min_t && t->y >= min_t)
+      //    int_t = t->y;
+      // else if (t->x >= min_t && t->y < min_t)
+      //    int_t = t->x;
+      // else
+      //    int_t = t->x < t->y ? t->x : t->y;
+
       shared_ptr<vec2> t = intersects(static_pointer_cast<Sphere>(geom));
-      if (t == NULL || (t->x < min_t && t->y < min_t)) return NULL;
-      if (t->x < min_t && t->y >= min_t)
+      if (t == NULL) return NULL;
+      if ((t->x < min_t && t->y < min_t) || (max_t > min_t && t->x > max_t && t->y > max_t)) {
+         return NULL;
+      } else if (t->x < min_t || (max_t > min_t && t->x > max_t)) {
          int_t = t->y;
-      else if (t->x >= min_t && t->y < min_t)
+      } else if (t->y < min_t || (max_t > min_t && t->y > max_t)) {
          int_t = t->x;
-      else
+      } else {
          int_t = t->x < t->y ? t->x : t->y;
+      }
    }
 
    // Plane intersection
    else if (typeid(*geom) == typeid(Plane)) {
+      // TODO: implement this with a max value
+      // float t = min_t - 1;
+      // if (!intersects(static_pointer_cast<Plane>(geom), t) || t < min_t)
+      //    return NULL;
+      // int_t = t;
+
       float t = min_t - 1;
-      if (!intersects(static_pointer_cast<Plane>(geom), t) || t < min_t)
-         return NULL;
+      if (!intersects(static_pointer_cast<Plane>(geom), t)) return NULL;
+      if (t < min_t) return NULL;
+      if (max_t > min_t && t > max_t) return NULL;
       int_t = t;
    }
 

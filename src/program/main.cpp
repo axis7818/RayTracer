@@ -194,9 +194,11 @@ int render(const Scene &scene, const bool use_alt_brdf) {
             // RGBColor color = intersection->target->pigment.color;
             RGBColor color;
             if (use_alt_brdf)
-               color = cook_torrance(make_shared<Scene>(scene), intersection);
+               color = cook_torrance(make_shared<Scene>(scene), intersection,
+                true);
             else
-               color = blinn_phong(make_shared<Scene>(scene), intersection);
+               color = blinn_phong(make_shared<Scene>(scene), intersection,
+                true);
             r = (unsigned int)round(color.r * 255.f);
             g = (unsigned int)round(color.g * 255.f);
             b = (unsigned int)round(color.b * 255.f);
@@ -272,9 +274,9 @@ int pixelcolor(const Scene &scene, const int x, const int y,
 
    RGBColor color;
    if (use_alt_brdf)
-      color = cook_torrance(make_shared<Scene>(scene), intersection);
+      color = cook_torrance(make_shared<Scene>(scene), intersection, true);
    else
-      color = blinn_phong(make_shared<Scene>(scene), intersection);
+      color = blinn_phong(make_shared<Scene>(scene), intersection, true);
 
    cout << "Pixel: [" << x << ", " << y << "] Ray: ";
    print_vec3(ray->source);

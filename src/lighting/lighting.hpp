@@ -13,9 +13,9 @@
 struct RGBColor;
 
 RGBColor blinn_phong(std::shared_ptr<Scene> scene,
- std::shared_ptr<Intersection> intersection);
+ std::shared_ptr<Intersection> intersection, bool shadows);
 
 RGBColor cook_torrance(std::shared_ptr<Scene> scene,
- std::shared_ptr<Intersection> intersection);
+ std::shared_ptr<Intersection> intersection, bool shadows);
 
 #endif /* end of include guard: _LIGHTING_HPP */

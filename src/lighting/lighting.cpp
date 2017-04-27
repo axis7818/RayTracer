@@ -5,7 +5,7 @@ using namespace glm;
 using namespace std;
 
 RGBColor blinn_phong(shared_ptr<Scene> scene,
- shared_ptr<Intersection> intersection) {
+ shared_ptr<Intersection> intersection, bool shadows) {
    if (intersection == NULL)
       return RGBColor(0, 0, 0);
 
@@ -29,11 +29,15 @@ RGBColor blinn_phong(shared_ptr<Scene> scene,
       vec3 lc = light->color.to_vec3();
 
       // test for shadow
-      shared_ptr<Ray> shadow_ray = make_shared<Ray>(
-       intersection->intersection_point, L, 0.1f);
-      shared_ptr<Intersection> shadow_intersection = scene->cast_ray(
-       shadow_ray);
-      if (shadow_intersection != NULL) continue;
+      if (shadows) {
+         float ray_len = length(light->position -
+          intersection->intersection_point);
+         shared_ptr<Ray> shadow_ray = make_shared<Ray>(
+          intersection->intersection_point, L, 0.1f, ray_len);
+         shared_ptr<Intersection> shadow_intersection = scene->cast_ray(
+          shadow_ray);
+         if (shadow_intersection != NULL) continue;
+      }
 
       float N_dot_L = glm::max(dot(N, L), 0.f);
       diffuse += k_d * N_dot_L * lc * obj_color;
@@ -50,7 +54,7 @@ RGBColor blinn_phong(shared_ptr<Scene> scene,
 }
 
 RGBColor cook_torrance(shared_ptr<Scene> scene,
- shared_ptr<Intersection> intersection) {
+ shared_ptr<Intersection> intersection, bool shadows) {
    if (intersection == NULL)
       return RGBColor(0, 0, 0);
 
@@ -76,11 +80,13 @@ RGBColor cook_torrance(shared_ptr<Scene> scene,
          vec3 H = normalize(V + L);
 
          // test for shadow
-         shared_ptr<Ray> shadow_ray = make_shared<Ray>(
-          intersection->intersection_point, L, 0.1f);
-         shared_ptr<Intersection> shadow_intersection = scene->cast_ray(
-          shadow_ray);
-         if (shadow_intersection != NULL) continue;
+         if (shadows) {
+            shared_ptr<Ray> shadow_ray = make_shared<Ray>(
+             intersection->intersection_point, L, 0.1f, 0);
+            shared_ptr<Intersection> shadow_intersection = scene->cast_ray(
+             shadow_ray);
+            if (shadow_intersection != NULL) continue;
+         }
 
          float H_dot_N = glm::max<float>(dot(H, N), 0);
          float V_dot_H = glm::max<float>(dot(V, H), 0);
