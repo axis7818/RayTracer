@@ -62,8 +62,6 @@ vec3 parse_vec3(ifstream &file, vector<char> &data) {
    if (components.size() != 3) {
       throw ParsingException("expected 3 elements in a vec3");
    }
-   // cout << "vec3(" << components[0] << ", " << components[1] << ", "
-   //  << components[2] << ")" << endl;
    return vec3(components[0], components[1], components[2]);
 }
 
@@ -185,6 +183,10 @@ Finish parse_finish(ifstream &file, vector<char> &data) {
          finish.specular = parse_float(file, data);
       } else if (just_read_key(data, ROUGHNESS_KEY)) {
          finish.roughness = parse_float(file, data);
+      } else if (just_read_key(data, METALLIC_KEY)) {
+         finish.metallic = parse_float(file, data);
+      } else if (just_read_key(data, IOR_KEY)) {
+         finish.ior = parse_float(file, data);
       }
    }
 

@@ -10,6 +10,8 @@ public:
    float diffuse;
    float specular;
    float roughness;
+   float metallic;
+   float ior;
 };
 
 #endif /* end of include guard: _FINISH_HPP */

@@ -19,5 +19,7 @@
 #define SPECULAR_KEY "specular"
 #define ROUGHNESS_KEY "roughness"
 #define TRANSLATE_KEY "translate"
+#define METALLIC_KEY "metallic"
+#define IOR_KEY "ior"
 
 #endif /* end of include guard: _KEYS_HPP */

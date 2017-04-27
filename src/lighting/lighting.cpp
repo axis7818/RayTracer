@@ -60,8 +60,10 @@ RGBColor cook_torrance(shared_ptr<Scene> scene,
 
    float k_a = intersection->target->finish.ambient;
    float k_d = intersection->target->finish.diffuse;
-   float a = 0.3f;    // assume for now, might come in with the .pov file
-   float n = 1.0f;   // assume for now, might come in with the .pov file
+   float a = intersection->target->finish.roughness;
+   float n = intersection->target->finish.ior;
+   float s = intersection->target->finish.metallic;
+   float d = 1 - s;
 
    vec3 obj_color = intersection->target->pigment.color.to_vec3();
    vec3 ambient = k_a * intersection->target->pigment.color.to_vec3();
@@ -93,9 +95,6 @@ RGBColor cook_torrance(shared_ptr<Scene> scene,
          float N_dot_L = dot(N, L);
          if (N_dot_L <= 0)
             continue;
-
-         float s = 0.2f;       // assume for now, might come in with the .pov file
-         float d = 1.0f - s;  // assume for now, might come in with the .pov file
 
          float D = pow(H_dot_N / (M_PI * a * a), (2.0f / (a * a)) - 2.0f);
          float G = glm::min<float>(2.0f * H_dot_N * N_dot_V / V_dot_H,
