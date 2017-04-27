@@ -12,7 +12,7 @@ RGBColor blinn_phong(shared_ptr<Scene> scene,
    float k_a = intersection->target->finish.ambient;
    float k_d = intersection->target->finish.diffuse;
    float k_s = intersection->target->finish.specular;
-   float shine = intersection->target->finish.shine;
+   float shine = (2.0f / pow(intersection->target->finish.roughness, 2)) - 2.0f;
 
    vec3 ambient = k_a * intersection->target->pigment.color.to_vec3();
    vec3 diffuse = vec3(0, 0, 0);
@@ -60,7 +60,7 @@ RGBColor cook_torrance(shared_ptr<Scene> scene,
    float a = 0.3;    // assume for now, might come in with the .pov file
    float n = 1.0f;   // assume for now, might come in with the .pov file
 
-   vec3 ambient = k_a * vec3(1, 1, 1);
+   vec3 ambient = k_a * intersection->target->pigment.color.to_vec3();
    vec3 diffuse = vec3(0, 0, 0);
    vec3 specular = vec3(0, 0, 0);
 

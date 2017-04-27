@@ -16,6 +16,8 @@
 #define FINISH_KEY "finish"
 #define AMBIENT_KEY "ambient"
 #define DIFFUSE_KEY "diffuse"
+#define SPECULAR_KEY "specular"
+#define ROUGHNESS_KEY "roughness"
 #define TRANSLATE_KEY "translate"
 
 #endif /* end of include guard: _KEYS_HPP */

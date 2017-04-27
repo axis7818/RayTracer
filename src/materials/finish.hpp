@@ -9,7 +9,7 @@ public:
    float ambient;
    float diffuse;
    float specular;
-   unsigned int shine;
+   float roughness;
 };
 
 #endif /* end of include guard: _FINISH_HPP */

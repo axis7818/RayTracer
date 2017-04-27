@@ -181,6 +181,10 @@ Finish parse_finish(ifstream &file, vector<char> &data) {
          finish.ambient = parse_float(file, data);
       } else if (just_read_key(data, DIFFUSE_KEY)) {
          finish.diffuse = parse_float(file, data);
+      } else if (just_read_key(data, SPECULAR_KEY)) {
+         finish.specular = parse_float(file, data);
+      } else if (just_read_key(data, ROUGHNESS_KEY)) {
+         finish.roughness = parse_float(file, data);
       }
    }
 

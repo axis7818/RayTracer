@@ -24,5 +24,5 @@ void Plane::print() const {
    cout << "  - Ambient: " << this->finish.ambient << endl;
    cout << "  - Diffuse: " << this->finish.diffuse << endl;
    cout << "  - Specular: " << this->finish.specular << endl;
-   cout << "  - Shine: " << this->finish.shine << endl;
+   cout << "  - Roughness: " << this->finish.roughness << endl;
 }
