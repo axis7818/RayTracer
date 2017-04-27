@@ -60,7 +60,7 @@ RGBColor cook_torrance(shared_ptr<Scene> scene,
 
    float k_a = intersection->target->finish.ambient;
    float k_d = intersection->target->finish.diffuse;
-   float a = intersection->target->finish.roughness;
+   float a = pow(intersection->target->finish.roughness, 2);
    float n = intersection->target->finish.ior;
    float s = intersection->target->finish.metallic;
    float d = 1 - s;
@@ -83,8 +83,10 @@ RGBColor cook_torrance(shared_ptr<Scene> scene,
 
          // test for shadow
          if (shadows) {
+            float ray_len = length(light->position -
+             intersection->intersection_point);
             shared_ptr<Ray> shadow_ray = make_shared<Ray>(
-             intersection->intersection_point, L, 0.1f, 0);
+             intersection->intersection_point, L, 0.1f, ray_len);
             shared_ptr<Intersection> shadow_intersection = scene->cast_ray(
              shadow_ray);
             if (shadow_intersection != NULL) continue;
