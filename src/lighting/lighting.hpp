@@ -9,6 +9,7 @@
 #include <memory>
 #include <rays/intersection.hpp>
 #include <scene/scene.hpp>
+#include <utils/printing.hpp>
 
 struct RGBColor;
 

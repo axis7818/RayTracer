@@ -7,7 +7,7 @@
 #include <iostream>
 #include <utils/color.hpp>
 
-void print_vec3(glm::vec3 v, unsigned int sig_figs = 4);
+void print_vec3(glm::vec3 v, int sig_figs = 4);
 void print_color(RGBColor color);
 
 #endif /* end of include guard: _PRINTING_HPP */

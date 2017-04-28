@@ -53,66 +53,93 @@ RGBColor blinn_phong(shared_ptr<Scene> scene,
    return RGBColor(color);
 }
 
+/* Cook Torrance Helper Functions */
+
+float normalized_distribution(float h_dot_n, float roughness) {
+   float alpha = roughness * roughness;
+   float exp = (2.0f / (alpha * alpha)) - 2.0f;
+   float denom = M_PI * alpha * alpha;
+   return pow(h_dot_n, exp) / denom;
+}
+
+float geometric_attenuation(float h_dot_n, float n_dot_v, float n_dot_l,
+ float v_dot_h) {
+   if (v_dot_h == 0) return 1.0f;
+   float shadowed = 2 * h_dot_n * n_dot_l / v_dot_h;
+   float occluded = 2 * h_dot_n * n_dot_v / v_dot_h;
+   return glm::min<float>(1.0f, glm::min<float>(shadowed, occluded));
+}
+
+float fresnel(float ior, float v_dot_h) {
+   float F_0 = pow(ior - 1.0f, 2) / pow(ior + 1.0f, 2);
+   return F_0 + (1.0f - F_0) * pow(1.0f - v_dot_h, 5);
+}
+
+/* END Cook Torrance Helper Functions */
+
 RGBColor cook_torrance(shared_ptr<Scene> scene,
  shared_ptr<Intersection> intersection, bool shadows) {
-   if (intersection == NULL)
-      return RGBColor(0, 0, 0);
+   if (intersection == NULL) return RGBColor(0, 0, 0);
 
+   // object properties
+   vec3 obj_color = intersection->target->pigment.color.to_vec3();
    float k_a = intersection->target->finish.ambient;
    float k_d = intersection->target->finish.diffuse;
-   float a = pow(intersection->target->finish.roughness, 2);
-   float n = intersection->target->finish.ior;
+   float roughness = intersection->target->finish.roughness;
+   float ior = intersection->target->finish.ior;
    float s = intersection->target->finish.metallic;
    float d = 1 - s;
 
-   vec3 obj_color = intersection->target->pigment.color.to_vec3();
-   vec3 ambient = k_a * intersection->target->pigment.color.to_vec3();
+   // 3 light components. I'll build on the diffuse and specular for each light
+   vec3 ambient = k_a * obj_color;
    vec3 diffuse = vec3(0, 0, 0);
    vec3 specular = vec3(0, 0, 0);
 
-   vec3 V = normalize(scene->camera->position
-    - intersection->intersection_point);
+   // important vectors and dot products
    vec3 N = intersection->target->get_normal(intersection->intersection_point);
-   float N_dot_V = dot(N, V);
+   vec3 V = normalize(scene->camera->position -
+    intersection->intersection_point);
+   float N_dot_V = glm::max(0.0f, dot(N, V));
 
-   if (N_dot_V > 0) {
-      for (shared_ptr<Light> light : scene->lights) {
-         vec3 lc = light->color.to_vec3();
-         vec3 L = normalize(light->position - intersection->intersection_point);
-         vec3 H = normalize(V + L);
+   // get diffuse and specular from each light
+   for (shared_ptr<Light> light : scene->lights) {
 
-         // test for shadow
-         if (shadows) {
-            float ray_len = length(light->position -
-             intersection->intersection_point);
-            shared_ptr<Ray> shadow_ray = make_shared<Ray>(
-             intersection->intersection_point, L, 0.1f, ray_len);
-            shared_ptr<Intersection> shadow_intersection = scene->cast_ray(
-             shadow_ray);
-            if (shadow_intersection != NULL) continue;
-         }
+      // important vectors and dot products specific to the light
+      vec3 lc = light->color.to_vec3();
+      vec3 L = normalize(light->position - intersection->intersection_point);
+      vec3 H = normalize(V + L);
+      float H_dot_N = glm::max(0.0f, dot(H, N));
+      float N_dot_L = glm::max(0.0f, dot(N, L));
+      float V_dot_H = glm::max(0.0f, dot(V, H));
 
-         float H_dot_N = glm::max<float>(dot(H, N), 0);
-         float V_dot_H = glm::max<float>(dot(V, H), 0);
-         float N_dot_L = dot(N, L);
-         if (N_dot_L <= 0)
-            continue;
-
-         float D = pow(H_dot_N / (M_PI * a * a), (2.0f / (a * a)) - 2.0f);
-         float G = glm::min<float>(2.0f * H_dot_N * N_dot_V / V_dot_H,
-          2.0f * H_dot_N * N_dot_L / V_dot_H); // TODO: handle the case where V_dot_H is zero
-         G = glm::min<float>(1.0f, G);
-         float F_0 = pow((n - 1) / (n + 1), 2);
-         float F = F_0 + (1 - F_0) * pow(1 - V_dot_H, 5);
-
-         float r_d = k_d;
-         float r_s = D * G * F / (4.0f * N_dot_V);
-
-         diffuse += N_dot_L * d * r_d * lc * obj_color;
-         specular += s * r_s * lc * obj_color;
+      // check for shadows
+      if (shadows) {
+         float ray_len = length(light->position -
+          intersection->intersection_point);
+         shared_ptr<Ray> shadow_ray = make_shared<Ray>(
+          intersection->intersection_point, L, 0.1f, ray_len);
+         shared_ptr<Intersection> shadow_intersection = scene->cast_ray(
+          shadow_ray);
+         if (shadow_intersection != NULL) continue;
       }
+
+      // calculate some values
+      float D = normalized_distribution(H_dot_N, roughness);
+      float G = geometric_attenuation(H_dot_N, N_dot_V, N_dot_L, V_dot_H);
+      float F = fresnel(ior, V_dot_H);
+
+      // accumulate diffuse lighting
+      float r_d = k_d;
+      diffuse += d * r_d * N_dot_L * lc * obj_color;
+
+      // accumulate specular lighting
+      // NOTE: N_dot_L is not in the denominator since it will be canceled out.
+      //       This minimizes floating point rounding errors.
+      float r_s = (D * G * F) / (4.0f * N_dot_V);
+      specular += s * r_s * lc * obj_color;
    }
 
+   // combine each component
    vec3 color = ambient + diffuse + specular;
    color.x = clamp<float>(color.x, 0, 1);
    color.y = clamp<float>(color.y, 0, 1);

@@ -3,8 +3,9 @@
 using namespace glm;
 using namespace std;
 
-void print_vec3(vec3 v, unsigned int sig_figs) {
-   cout << setprecision(sig_figs);
+void print_vec3(vec3 v, int sig_figs) {
+   if (sig_figs > 0)
+      cout << setprecision(sig_figs);
    cout << "{" << v.x << " " << v.y << " " << v.z << "}";
 }
 
