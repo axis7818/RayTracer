@@ -11,12 +11,15 @@
 #include <scene/scene.hpp>
 #include <utils/printing.hpp>
 
+#define LIGHTING_MODE_BP 0
+#define LIGHTING_MODE_CT 1
+
 struct RGBColor;
 
-RGBColor blinn_phong(std::shared_ptr<Scene> scene,
- std::shared_ptr<Intersection> intersection, bool shadows);
+RGBColor ray_lighting(std::shared_ptr<Scene> scene, 
+ std::shared_ptr<Ray> ray, int lighting_mode, bool shadows);
 
-RGBColor cook_torrance(std::shared_ptr<Scene> scene,
- std::shared_ptr<Intersection> intersection, bool shadows);
+RGBColor ray_lighting(std::shared_ptr<Scene> scene,
+ glm::vec3 source, glm::vec3 destination, int lighting_mode, bool shadows);
 
 #endif /* end of include guard: _LIGHTING_HPP */
