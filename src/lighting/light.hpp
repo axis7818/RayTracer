@@ -2,8 +2,8 @@
 #ifndef _LIGHT_HPP
 #define _LIGHT_HPP
 
+#include <scene/actors/actor.hpp>
 #include <utils/color.hpp>
-#include "actor.hpp"
 
 class Light: public Actor {
    public:

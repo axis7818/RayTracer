@@ -3,11 +3,11 @@
 #define _SCENE_HPP
 
 #include <glm/vec3.hpp>
+#include <lighting/light.hpp>
 #include <rays/intersection.hpp>
 #include <rays/ray.hpp>
 #include <scene/actors/actor.hpp>
 #include <scene/actors/camera.hpp>
-#include <scene/actors/light.hpp>
 #include <string>
 #include <utils/printing.hpp>
 #include <vector>

@@ -11,6 +11,8 @@
 #include <scene/scene.hpp>
 #include <utils/printing.hpp>
 
+#define MAX_LIGHT_BOUNCES 6
+
 struct RGBColor;
 
 RGBColor blinn_phong(std::shared_ptr<Scene> scene,

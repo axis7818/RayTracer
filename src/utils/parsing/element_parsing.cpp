@@ -155,6 +155,23 @@ shared_ptr<Plane> parse_plane(ifstream &file, vector<char> &data) {
    return plane;
 }
 
+shared_ptr<Triangle> parse_triangle(ifstream &file, vector<char> &data) {
+   shared_ptr<Triangle> triangle = make_shared<Triangle>();
+   char next;
+
+   _start_block(file, data);
+   // TODO: parse triangle specific stuff
+   while (read_next(file, data, next) && next != '}') {
+      if (just_read_key(data, PIGMENT_KEY)) {
+         triangle->pigment = parse_pigment(file, data);
+      } else if (just_read_key(data, FINISH_KEY)) {
+         triangle->finish = parse_finish(file, data);
+      }
+   }
+
+   return triangle;
+}
+
 Pigment parse_pigment(ifstream &file, vector<char> &data) {
    Pigment pigment;
    char next;

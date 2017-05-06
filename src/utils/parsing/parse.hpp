@@ -4,9 +4,9 @@
 
 #include <fstream>
 #include <iostream>
+#include <lighting/light.hpp>
 #include <scene/actors/actor.hpp>
 #include <scene/actors/camera.hpp>
-#include <scene/actors/light.hpp>
 #include <scene/scene.hpp>
 #include <vector>
 #include "element_parsing.hpp"
