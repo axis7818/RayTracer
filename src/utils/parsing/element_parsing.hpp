@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <fstream>
 #include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 #include <iostream>
 #include <lighting/light.hpp>
 #include <materials/finish.hpp>

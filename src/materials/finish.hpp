@@ -12,6 +12,8 @@ public:
    float roughness;
    float metallic;
    float ior;
+   float reflection;
+   float refraction;
 };
 
 #endif /* end of include guard: _FINISH_HPP */

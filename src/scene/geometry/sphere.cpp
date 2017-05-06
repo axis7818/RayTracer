@@ -19,10 +19,6 @@ void Sphere::print() const {
    cout << "- Radius: " << this->radius << endl;
    cout << "- Color: ";
    print_vec3(this->pigment.color.to_vec3());
-   cout << endl;
-   cout << "- Material:" << endl;
-   cout << "  - Ambient: " << this->finish.ambient << endl;
-   cout << "  - Diffuse: " << this->finish.diffuse << endl;
-   cout << "  - Specular: " << this->finish.specular << endl;
-   cout << "  - Roughness: " << this->finish.roughness << endl;
+   cout << ", Filter: " << this->pigment.filter << endl;
+   print_finish(this->finish);
 }

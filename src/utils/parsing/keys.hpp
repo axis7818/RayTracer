@@ -13,6 +13,7 @@
 #define RIGHT_KEY "right"
 #define LOOK_AT_KEY "look_at"
 #define COLOR_RGB_KEY "color rgb"
+#define COLOR_RGBF_KEY "color rgbf"
 #define PIGMENT_KEY "pigment"
 #define FINISH_KEY "finish"
 #define AMBIENT_KEY "ambient"
@@ -22,5 +23,7 @@
 #define TRANSLATE_KEY "translate"
 #define METALLIC_KEY "metallic"
 #define IOR_KEY "ior"
+#define REFLECTION_KEY "reflection"
+#define REFRACTION_KEY "refraction"
 
 #endif /* end of include guard: _KEYS_HPP */

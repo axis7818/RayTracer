@@ -65,6 +65,15 @@ vec3 parse_vec3(ifstream &file, vector<char> &data) {
    return vec3(components[0], components[1], components[2]);
 }
 
+vec4 parse_vec4(ifstream &file, vector<char> &data) {
+   _start_vector(file, data);
+   vector<float> components = _end_vector(file, data, 4);
+   if (components.size() != 4) {
+      throw ParsingException("expected 4 elements in a vec4");
+   }
+   return vec4(components[0], components[1], components[2], components[3]);
+}
+
 float parse_float(ifstream &file, vector<char> &data) {
    char next = file.peek();
    while ((next < '0' || next > '9') && next != '-') {
@@ -180,8 +189,13 @@ Pigment parse_pigment(ifstream &file, vector<char> &data) {
 
    _start_block(file, data);
    while (read_next(file, data, next) && next != '}') {
-      if (just_read_key(data, COLOR_RGB_KEY)) {
+      if (just_read_key(data, COLOR_RGB_KEY) && file.peek() != 'f') {
          pigment.color.from_vec3(parse_vec3(file, data));
+         pigment.filter = 0.0f;
+      } else if (just_read_key(data, COLOR_RGBF_KEY)) {
+         vec4 pgmt_data = parse_vec4(file, data);
+         pigment.color.from_vec3(vec3(pgmt_data));
+         pigment.filter = pgmt_data.w;
       }
    }
 
@@ -206,6 +220,10 @@ Finish parse_finish(ifstream &file, vector<char> &data) {
          finish.metallic = parse_float(file, data);
       } else if (just_read_key(data, IOR_KEY)) {
          finish.ior = parse_float(file, data);
+      } else if (just_read_key(data, REFLECTION_KEY)) {
+         finish.reflection = parse_float(file, data);
+      } else if (just_read_key(data, REFRACTION_KEY)) {
+         finish.refraction = parse_float(file, data);
       }
    }
 

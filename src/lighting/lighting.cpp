@@ -65,23 +65,15 @@ bool in_shadow(shared_ptr<Scene> scene, shared_ptr<Light> light,
     intersection->intersection_point);
 
    shared_ptr<Ray> shadow_ray = make_shared<Ray>(
-    intersection->intersection_point, L, 0.1f, shadow_ray_len);
+    intersection->intersection_point, L, 0.001f, shadow_ray_len);
    shared_ptr<Intersection> shadow_intersection = scene->cast_ray(
     shadow_ray);
 
    return shadow_intersection != NULL;
 }
 
-RGBColor recursive_ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
- LightingMode lighting_mode, int recursion_level) {
-   if (recursion_level <= 0) return RGBColor(0, 0, 0);
-
-   // prepare some data needed for lighting
-   shared_ptr<Intersection> intersection = scene->cast_ray(ray);
-   if (intersection == NULL) return RGBColor(0, 0, 0);
-   if (lighting_mode < BLINN_PHONG || lighting_mode > COOK_TORRANCE)
-      lighting_mode = BLINN_PHONG;
-
+RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
+ shared_ptr<Intersection> intersection, LightingMode lighting_mode) {
    // alias some common properties to save typing
    float k_a = intersection->target->finish.ambient;
    float k_d = intersection->target->finish.diffuse;
@@ -116,27 +108,101 @@ RGBColor recursive_ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
       // accumulate diffuse and specular
       switch (lighting_mode) {
 
-         case BLINN_PHONG:
-            diffuse += bp_diffuse_for_light(k_d, N, L, lc, obj_color);
-            specular += bp_specular_for_light(k_s, shine, H, N, lc,
-             obj_color);
-            break;
+       case BLINN_PHONG:
+         diffuse += bp_diffuse_for_light(k_d, N, L, lc, obj_color);
+         specular += bp_specular_for_light(k_s, shine, H, N, lc,
+          obj_color);
+         break;
 
-         case COOK_TORRANCE:
-            diffuse += ct_diffuse_for_light(d, k_d, N, L, lc, obj_color);
-            specular += ct_specular_for_light(s, roughness, ior, N, V, L, H, lc,
-             obj_color);
-            break;
+       case COOK_TORRANCE:
+         diffuse += ct_diffuse_for_light(d, k_d, N, L, lc, obj_color);
+         specular += ct_specular_for_light(s, roughness, ior, N, V, L, H, lc,
+          obj_color);
+         break;
 
       }
    }
 
-   // combine the color components and clamp between 0 and 1
-   vec3 color = ambient + diffuse + specular;
-   color.x = clamp<float>(color.x, 0, 1);
-   color.y = clamp<float>(color.y, 0, 1);
-   color.z = clamp<float>(color.z, 0, 1);
-   return RGBColor(color);
+   // combine the color components
+   return RGBColor(ambient + diffuse + specular);
+}
+
+shared_ptr<Ray> get_reflected_ray(shared_ptr<Intersection> intersection) {
+   vec3 N = intersection->target->get_normal(intersection->intersection_point);
+   vec3 r = intersection->ray->dir - 2 * (dot(intersection->ray->dir, N)) * N;
+   return make_shared<Ray>(intersection->intersection_point, r, 0.001f, 0);
+}
+
+shared_ptr<Ray> get_transmitted_ray(shared_ptr<Intersection> intersection) {
+   // some important values for the calculation
+   vec3 d = intersection->ray->dir;
+   vec3 N = intersection->target->get_normal(intersection->intersection_point);
+   float ior_ratio = 1.0f / intersection->target->finish.ior;
+   if (dot(d, N) > 0) { // this means we are leaving the object
+      ior_ratio = intersection->target->finish.ior;
+      N = -N;
+   }
+
+   float root = sqrt(1.0f - pow(ior_ratio, 2) * (1.0f - pow(dot(d, N), 2)));
+   vec3 first_term = ior_ratio * (d - dot(d, N) * N);
+   vec3 t = first_term - N * root;
+
+   return make_shared<Ray>(intersection->intersection_point, t, 0.001f, 0);
+}
+
+float schlicks_approximation(shared_ptr<Intersection> intersection) {
+   float ior = intersection->target->finish.ior;
+   vec3 n = intersection->target->get_normal(intersection->intersection_point);
+   vec3 v = normalize(intersection->ray->source -
+    intersection->intersection_point);
+
+   float F_0 = pow((ior - 1) / (ior + 1), 2);
+   return F_0 + (1.0f - F_0) * pow(1 - dot(n, v), 5);
+}
+
+RGBColor recursive_ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
+ LightingMode lighting_mode, int recursion_level) {
+   if (recursion_level <= 0) return RGBColor(0, 0, 0);
+
+   // prepare some data needed for lighting
+   shared_ptr<Intersection> intersection = scene->cast_ray(ray);
+   if (intersection == NULL) return RGBColor(0, 0, 0);
+
+   // start with the local shading
+   vec3 local_color = local_shading(scene, ray, intersection,
+    lighting_mode).to_vec3();
+
+   // reflected light
+   vec3 reflected_color = vec3(0, 0, 0);
+   float reflection = intersection->target->finish.reflection;
+   if (reflection > 0) {
+      shared_ptr<Ray> reflected_ray = get_reflected_ray(intersection);
+      reflected_color = recursive_ray_lighting(scene, reflected_ray,
+       lighting_mode, recursion_level - 1).to_vec3();
+   }
+
+   // refracted light
+   vec3 refracted_color = vec3(0, 0, 0);
+   float refraction = intersection->target->finish.refraction;
+   if (refraction > 0) {
+      shared_ptr<Ray> transmitted_ray = get_transmitted_ray(intersection);
+      refracted_color = recursive_ray_lighting(scene, transmitted_ray,
+       lighting_mode, recursion_level - 1).to_vec3();
+   }
+
+   // filter the final color
+   float filter = intersection->target->pigment.filter;
+   float fresnel_reflectance = schlicks_approximation(intersection);
+   float local_contrib = (1.0f - filter) * (1 - reflection);
+   float reflection_contrib = (1.0f - filter) * reflection + filter *
+    fresnel_reflectance;
+   float transmission_contrib = filter * (1.0f - fresnel_reflectance);
+
+   RGBColor result = RGBColor(local_contrib * local_color +
+                              reflection_contrib * reflected_color +
+                              transmission_contrib * refracted_color);
+   result.saturate();
+   return result;
 }
 
 RGBColor ray_lighting(shared_ptr<Scene> scene, vec3 source, vec3 destination,

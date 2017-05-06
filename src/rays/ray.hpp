@@ -22,10 +22,11 @@ public:
    bool intersects(std::shared_ptr<Triangle> triangle, float &t);
    glm::vec3 point_at(float t) const;
 
-   glm::vec3 source;
-   glm::vec3 dir;
-   float min_t;
-   float max_t;
+   glm::vec3 source;    // source point in space
+   glm::vec3 dir;       // normalized direction
+   float min_t;         // the smallest possible t value for this ray
+   float max_t;         // the largest possible t value for this ray, if less
+                        //    than min_t, assumed to be infinity
 };
 
 #endif /* end of include guard: _RAY_HPP */

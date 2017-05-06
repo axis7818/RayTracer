@@ -7,6 +7,7 @@
 class Pigment {
 public:
    RGBColor color;
+   float filter;
 };
 
 #endif /* end of include guard: _PIGMENT_HPP */

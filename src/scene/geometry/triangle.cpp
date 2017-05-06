@@ -23,10 +23,6 @@ void Triangle::print() const {
 
    cout << "- Color";
    print_vec3(pigment.color.to_vec3());
-   cout << endl;
-   cout << "- Material:" << endl;
-   cout << "  - Ambient: " << finish.ambient << endl;
-   cout << "  - Diffuse: " << finish.diffuse << endl;
-   cout << "  - Specular: " << finish.specular << endl;
-   cout << "  - Roughness: " << finish.roughness << endl;
+   cout << ", Filter: " << this->pigment.filter << endl;
+   print_finish(this->finish);
 }

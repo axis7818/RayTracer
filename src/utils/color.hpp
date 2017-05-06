@@ -2,6 +2,7 @@
 #ifndef _COLOR_HPP
 #define _COLOR_HPP
 
+#include <glm/common.hpp>
 #include <glm/vec3.hpp>
 
 struct RGBColor {
@@ -11,6 +12,8 @@ struct RGBColor {
 
    glm::vec3 to_vec3() const { return glm::vec3(r, g, b); }
    void from_vec3(glm::vec3 v) { r=v.x; g=v.y; b=v.z; }
+
+   void saturate();
 
    float r;
    float g;
