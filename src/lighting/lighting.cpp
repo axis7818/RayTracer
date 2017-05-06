@@ -35,38 +35,13 @@ vec3 bp_specular_for_light(float k_s, float shine, vec3 H, vec3 N, vec3 lc,
    return k_s * pow(H_dot_N, shine) * lc * obj_color;
 }
 
-/*
-RGBColor cook_torrance(shared_ptr<Scene> scene,
- shared_ptr<Intersection> intersection, bool shadows) {
-
-   for (shared_ptr<Light> light : scene->lights) {
-
-      // calculate some values
-      float D = normalized_distribution(H_dot_N, roughness);
-      float G = geometric_attenuation(H_dot_N, N_dot_V, N_dot_L, V_dot_H);
-      float F = fresnel(ior, V_dot_H);
-
-      // accumulate diffuse lighting
-      float r_d = k_d;
-      diffuse += d * r_d * N_dot_L * lc * obj_color;
-
-      // accumulate specular lighting
-      // NOTE: N_dot_L is not in the denominator since it will be canceled out.
-      //       This minimizes floating point rounding errors.
-      float r_s = (D * G * F) / (4.0f * N_dot_V);
-      specular += s * r_s * lc * obj_color;
-   }
-
-}
-*/
-
-vec3 ct_diffuse_for_light(float d, float r_d, vec3 N, vec3 L, vec3 lc, 
+vec3 ct_diffuse_for_light(float d, float r_d, vec3 N, vec3 L, vec3 lc,
  vec3 obj_color) {
    float N_dot_L = glm::max(0.0f, dot(N, L));
    return d * r_d * N_dot_L * lc * obj_color;
 }
 
-vec3 ct_specular_for_light(float s, float roughness, float ior, vec3 N, vec3 V, 
+vec3 ct_specular_for_light(float s, float roughness, float ior, vec3 N, vec3 V,
  vec3 L, vec3 H, vec3 lc, vec3 obj_color) {
    float H_dot_N = glm::max(0.0f, dot(H, N));
    float N_dot_V = glm::max(0.0f, dot(N, V));
@@ -82,11 +57,11 @@ vec3 ct_specular_for_light(float s, float roughness, float ior, vec3 N, vec3 V,
    return s * r_s * lc * obj_color;
 }
 
-bool in_shadow(shared_ptr<Scene> scene, shared_ptr<Light> light, 
+bool in_shadow(shared_ptr<Scene> scene, shared_ptr<Light> light,
  shared_ptr<Intersection> intersection) {
    vec3 L = light->position - intersection->intersection_point;
-   
-   float shadow_ray_len = length(light->position - 
+
+   float shadow_ray_len = length(light->position -
     intersection->intersection_point);
 
    shared_ptr<Ray> shadow_ray = make_shared<Ray>(
@@ -97,20 +72,15 @@ bool in_shadow(shared_ptr<Scene> scene, shared_ptr<Light> light,
    return shadow_intersection != NULL;
 }
 
-RGBColor ray_lighting(std::shared_ptr<Scene> scene, vec3 source, 
- vec3 destination, int lighting_mode, bool shadows) {
-   shared_ptr<Ray> ray = make_shared<Ray>(source, destination - source, 0, -1);
-   return ray_lighting(scene, ray, lighting_mode, shadows);
-}
-
-RGBColor ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
- int lighting_mode, bool shadows) {
+RGBColor recursive_ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
+ LightingMode lighting_mode, int recursion_level) {
+   if (recursion_level <= 0) return RGBColor(0, 0, 0);
 
    // prepare some data needed for lighting
    shared_ptr<Intersection> intersection = scene->cast_ray(ray);
    if (intersection == NULL) return RGBColor(0, 0, 0);
-   if (lighting_mode < LIGHTING_MODE_BP || lighting_mode > LIGHTING_MODE_CT)
-      lighting_mode = LIGHTING_MODE_BP;
+   if (lighting_mode < BLINN_PHONG || lighting_mode > COOK_TORRANCE)
+      lighting_mode = BLINN_PHONG;
 
    // alias some common properties to save typing
    float k_a = intersection->target->finish.ambient;
@@ -131,12 +101,12 @@ RGBColor ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
    // important vectors
    vec3 V = normalize(ray->source - intersection->intersection_point);
    vec3 N = intersection->target->get_normal(intersection->intersection_point);
-   
+
    // determine the diffuse/specular from each light source
    for (shared_ptr<Light> light : scene->lights) {
-      
+
       // not for shadows!
-      if (shadows && in_shadow(scene, light, intersection)) continue;
+      if (USE_SHADOWS && in_shadow(scene, light, intersection)) continue;
 
       // important vectors
       vec3 L = normalize(light->position - intersection->intersection_point);
@@ -146,22 +116,22 @@ RGBColor ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
       // accumulate diffuse and specular
       switch (lighting_mode) {
 
-         case LIGHTING_MODE_BP:
+         case BLINN_PHONG:
             diffuse += bp_diffuse_for_light(k_d, N, L, lc, obj_color);
-            specular += bp_specular_for_light(k_s, shine, H, N, lc, 
+            specular += bp_specular_for_light(k_s, shine, H, N, lc,
              obj_color);
             break;
 
-         case LIGHTING_MODE_CT:
+         case COOK_TORRANCE:
             diffuse += ct_diffuse_for_light(d, k_d, N, L, lc, obj_color);
-            specular += ct_specular_for_light(s, roughness, ior, N, V, L, H, lc, 
+            specular += ct_specular_for_light(s, roughness, ior, N, V, L, H, lc,
              obj_color);
             break;
 
       }
    }
 
-   // combine the color components and clamp between 0 and 1 
+   // combine the color components and clamp between 0 and 1
    vec3 color = ambient + diffuse + specular;
    color.x = clamp<float>(color.x, 0, 1);
    color.y = clamp<float>(color.y, 0, 1);
@@ -169,3 +139,13 @@ RGBColor ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
    return RGBColor(color);
 }
 
+RGBColor ray_lighting(shared_ptr<Scene> scene, vec3 source, vec3 destination,
+ LightingMode lighting_mode) {
+   shared_ptr<Ray> ray = make_shared<Ray>(source, destination - source, 0, -1);
+   return ray_lighting(scene, ray, lighting_mode);
+}
+
+RGBColor ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
+ LightingMode lighting_mode) {
+   return recursive_ray_lighting(scene, ray, lighting_mode, MAX_LIGHT_BOUNCES);
+}

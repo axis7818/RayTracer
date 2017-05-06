@@ -12,15 +12,18 @@
 #include <utils/printing.hpp>
 
 #define MAX_LIGHT_BOUNCES 6
-#define LIGHTING_MODE_BP 0
-#define LIGHTING_MODE_CT 1
+#define USE_SHADOWS true
+#define USE_REFLECTIONS true
+#define USE_REFRACTIONS true
 
 struct RGBColor;
 
-RGBColor ray_lighting(std::shared_ptr<Scene> scene, 
- std::shared_ptr<Ray> ray, int lighting_mode, bool shadows);
+enum LightingMode { BLINN_PHONG, COOK_TORRANCE };
 
 RGBColor ray_lighting(std::shared_ptr<Scene> scene,
- glm::vec3 source, glm::vec3 destination, int lighting_mode, bool shadows);
+ std::shared_ptr<Ray> ray, LightingMode lighting_mode);
+
+RGBColor ray_lighting(std::shared_ptr<Scene> scene,
+ glm::vec3 source, glm::vec3 destination, LightingMode lighting_mode);
 
 #endif /* end of include guard: _LIGHTING_HPP */

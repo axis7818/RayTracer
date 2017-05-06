@@ -185,9 +185,9 @@ int render(const Scene &scene, const bool use_alt_brdf) {
       for (int y = 0; y < scene.camera->height; ++y) {
          shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
 
-         int lighting_mode = use_alt_brdf ? LIGHTING_MODE_CT : LIGHTING_MODE_BP;
-         RGBColor color = ray_lighting(make_shared<Scene>(scene), ray, 
-          lighting_mode, true);
+         LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
+         RGBColor color = ray_lighting(make_shared<Scene>(scene), ray,
+          lighting_mode);
 
          unsigned int r = (unsigned int)round(color.r * 255.f);
          unsigned int g = (unsigned int)round(color.g * 255.f);
@@ -260,9 +260,9 @@ int pixelcolor(const Scene &scene, const int x, const int y,
    shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
    shared_ptr<Intersection> intersection = scene.cast_ray(ray);
 
-   int lighting_mode = use_alt_brdf ? LIGHTING_MODE_CT : LIGHTING_MODE_BP;
+   LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
    RGBColor color = ray_lighting(make_shared<Scene>(scene), ray->source,
-    intersection->intersection_point, lighting_mode, true);
+    intersection->intersection_point, lighting_mode);
 
    cout << "Pixel: [" << x << ", " << y << "] Ray: ";
    print_vec3(ray->source);

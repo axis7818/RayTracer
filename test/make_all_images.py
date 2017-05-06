@@ -11,10 +11,7 @@ PROGRAM = os.path.join(PROGRAM_DIR, "raytrace")
 
 POV_DIR = "/Users/cameron/school/cpe473/RayTracer/resources/"
 # POV_DIR = "/home/ctaylo36/473/RayTracer/resources/"
-POV_FILES = [
-    "simple", "pbr_grid", "planes", "simp_cam0", "simp_cam1", "simp_cam2",
-    "simp_cam3", "specular", "spheres", "ugly",
-]
+POV_FILES = [f for f in os.listdir(POV_DIR) if f.endswith(".pov")]
 
 OUTPUT_PNG = os.path.join(os.getcwd(), "output.png")
 BP_OUTPUT_DIR = os.path.join(os.getcwd(), "blinn_phong")
@@ -39,22 +36,23 @@ def main():
             os.mkdir(dir)
 
     for pov in POV_FILES:
-        pov_file = os.path.join(POV_DIR, "{}.pov".format(pov))
+        pov_file = os.path.join(POV_DIR, pov)
 
         if MODE != 2:
             print("--- {}: {} ---".format("Blinn-Phong", pov))
             run(pov_file, False)
-            target = os.path.join(BP_OUTPUT_DIR, "{}.png".format(pov))
-            shutil.copy(OUTPUT_PNG, target)
+            target = os.path.join(BP_OUTPUT_DIR, "{}.png".format(pov[:-4]))
+            if os.path.exists(OUTPUT_PNG):
+                shutil.copy(OUTPUT_PNG, target)
+                os.remove(OUTPUT_PNG)
 
         if MODE != 1:
             print("--- {}: {} ---".format("Cook-Torrance", pov))
             run(pov_file, True)
-            target = os.path.join(CT_OUTPUT_DIR, "{}.png".format(pov))
-            shutil.copy(OUTPUT_PNG, target)
-
-    if os.path.exists(OUTPUT_PNG):
-        os.remove(OUTPUT_PNG)
+            target = os.path.join(CT_OUTPUT_DIR, "{}.png".format(pov[:-4]))
+            if os.path.exists(OUTPUT_PNG):
+                shutil.copy(OUTPUT_PNG, target)
+                os.remove(OUTPUT_PNG)
 
 if __name__ == "__main__":
     main()

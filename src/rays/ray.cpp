@@ -26,10 +26,19 @@ shared_ptr<Intersection> Ray::intersects(shared_ptr<Geometry> geom) {
       }
    }
 
-   // Plane intersection
-   else if (typeid(*geom) == typeid(Plane)) {
+   // Plane and Triangle intersection
+   else if (typeid(*geom) == typeid(Plane) || typeid(*geom) ==
+    typeid(Triangle)) {
       float t = min_t - 1;
-      if (!intersects(static_pointer_cast<Plane>(geom), t)) return NULL;
+
+      if (
+         (typeid(*geom) == typeid(Triangle) &&
+         !intersects(static_pointer_cast<Triangle>(geom), t))
+         ||
+         (typeid(*geom) == typeid(Plane) &&
+         !intersects(static_pointer_cast<Plane>(geom), t))
+      ) return NULL;
+
       if (t < min_t) return NULL;
       if (max_t > min_t && t > max_t) return NULL;
       int_t = t;
@@ -69,6 +78,10 @@ bool Ray::intersects(shared_ptr<Plane> plane, float &t) {
    float num = plane->distance - dot(source, plane->normal);
    t = num / den;
    return true;
+}
+
+bool Ray::intersects(shared_ptr<Triangle> triangle, float &t) {
+   return false;
 }
 
 vec3 Ray::point_at(float t) const {

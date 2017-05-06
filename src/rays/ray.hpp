@@ -8,6 +8,7 @@
 #include <memory>
 #include <scene/geometry/plane.hpp>
 #include <scene/geometry/sphere.hpp>
+#include <scene/geometry/triangle.hpp>
 
 class Intersection;
 
@@ -18,6 +19,7 @@ public:
    std::shared_ptr<Intersection> intersects(std::shared_ptr<Geometry> geometry);
    std::shared_ptr<glm::vec2> intersects(std::shared_ptr<Sphere> sphere);
    bool intersects(std::shared_ptr<Plane> plane, float &t);
+   bool intersects(std::shared_ptr<Triangle> triangle, float &t);
    glm::vec3 point_at(float t) const;
 
    glm::vec3 source;
