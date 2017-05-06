@@ -6,6 +6,7 @@
 #define LIGHT_KEY "light_source"
 #define SPHERE_KEY "sphere"
 #define PLANE_KEY "plane"
+#define TRIANGLE_KEY "triangle"
 
 #define LOCATION_KEY "location"
 #define UP_KEY "up"

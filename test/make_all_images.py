@@ -5,12 +5,12 @@ import shutil
 import sys
 from subprocess import call
 
-# PROGRAM_DIR = "/Users/cameron/school/cpe473/RayTracer/build/"
-PROGRAM_DIR = "/home/ctaylo36/473/RayTracer/build/"
+PROGRAM_DIR = "/Users/cameron/school/cpe473/RayTracer/build/"
+# PROGRAM_DIR = "/home/ctaylo36/473/RayTracer/build/"
 PROGRAM = os.path.join(PROGRAM_DIR, "raytrace")
 
-# POV_DIR = "/Users/cameron/school/cpe473/RayTracer/resources/"
-POV_DIR = "/home/ctaylo36/473/RayTracer/resources/"
+POV_DIR = "/Users/cameron/school/cpe473/RayTracer/resources/"
+# POV_DIR = "/home/ctaylo36/473/RayTracer/resources/"
 POV_FILES = [
     "simple", "pbr_grid", "planes", "simp_cam0", "simp_cam1", "simp_cam2",
     "simp_cam3", "specular", "spheres", "ugly",

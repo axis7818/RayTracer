@@ -5,10 +5,10 @@ import os
 import sys
 from subprocess import call
 
-# TEST_FILES_DIR = "/Users/cameron/school/cpe473/csc473-testfiles/p2/"
-# PROGRAM_DIR = "/Users/cameron/school/cpe473/RayTracer/build/"
-TEST_FILES_DIR = "/home/ctaylo36/473/csc473-testfiles/p2/"
-PROGRAM_DIR = "/home/ctaylo36/473/RayTracer/build/"
+TEST_FILES_DIR = "/Users/cameron/school/cpe473/csc473-testfiles/p2/"
+PROGRAM_DIR = "/Users/cameron/school/cpe473/RayTracer/build/"
+# TEST_FILES_DIR = "/home/ctaylo36/473/csc473-testfiles/p2/"
+# PROGRAM_DIR = "/home/ctaylo36/473/RayTracer/build/"
 
 PROGRAM = os.path.join(PROGRAM_DIR, "raytrace")
 OUTPUT_FILE = os.path.join(PROGRAM_DIR, ".tmp.out")

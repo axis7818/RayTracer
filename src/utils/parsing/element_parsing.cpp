@@ -160,7 +160,9 @@ shared_ptr<Triangle> parse_triangle(ifstream &file, vector<char> &data) {
    char next;
 
    _start_block(file, data);
-   // TODO: parse triangle specific stuff
+   triangle->a = parse_vec3(file, data);
+   triangle->b = parse_vec3(file, data);
+   triangle->c = parse_vec3(file, data);
    while (read_next(file, data, next) && next != '}') {
       if (just_read_key(data, PIGMENT_KEY)) {
          triangle->pigment = parse_pigment(file, data);
