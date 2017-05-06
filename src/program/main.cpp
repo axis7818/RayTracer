@@ -184,26 +184,14 @@ int render(const Scene &scene, const bool use_alt_brdf) {
    for (int x = 0; x < scene.camera->width; ++x) {
       for (int y = 0; y < scene.camera->height; ++y) {
          shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
-         shared_ptr<Intersection> intersection = scene.cast_ray(ray);
 
-         unsigned char r = 0;
-         unsigned char g = 0;
-         unsigned char b = 0;
+         int lighting_mode = use_alt_brdf ? LIGHTING_MODE_CT : LIGHTING_MODE_BP;
+         RGBColor color = ray_lighting(make_shared<Scene>(scene), ray, 
+          lighting_mode, true);
 
-         if (intersection != NULL) {
-            // RGBColor color = intersection->target->pigment.color;
-            RGBColor color;
-            if (use_alt_brdf)
-               color = cook_torrance(make_shared<Scene>(scene), intersection,
-                true);
-            else
-               color = blinn_phong(make_shared<Scene>(scene), intersection,
-                true);
-            r = (unsigned int)round(color.r * 255.f);
-            g = (unsigned int)round(color.g * 255.f);
-            b = (unsigned int)round(color.b * 255.f);
-            // cout << "r: " << (int)r << ", g: " << (int)g << ", b: " << (int)b << endl;
-         }
+         unsigned int r = (unsigned int)round(color.r * 255.f);
+         unsigned int g = (unsigned int)round(color.g * 255.f);
+         unsigned int b = (unsigned int)round(color.b * 255.f);
 
          size_t index = scene.camera->width * 3 * (scene.camera->height -
           1 - y) + 3 * x;
@@ -272,11 +260,9 @@ int pixelcolor(const Scene &scene, const int x, const int y,
    shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
    shared_ptr<Intersection> intersection = scene.cast_ray(ray);
 
-   RGBColor color;
-   if (use_alt_brdf)
-      color = cook_torrance(make_shared<Scene>(scene), intersection, true);
-   else
-      color = blinn_phong(make_shared<Scene>(scene), intersection, true);
+   int lighting_mode = use_alt_brdf ? LIGHTING_MODE_CT : LIGHTING_MODE_BP;
+   RGBColor color = ray_lighting(make_shared<Scene>(scene), ray->source,
+    intersection->intersection_point, lighting_mode, true);
 
    cout << "Pixel: [" << x << ", " << y << "] Ray: ";
    print_vec3(ray->source);
