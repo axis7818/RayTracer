@@ -160,34 +160,51 @@ float schlicks_approximation(shared_ptr<Intersection> intersection) {
    return F_0 + (1.0f - F_0) * pow(1 - dot(n, v), 5);
 }
 
-RGBColor recursive_ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
+float beers_law() {
+   // TODO: implement
+   return 1.0f;
+}
+
+shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
  LightingMode lighting_mode, int recursion_level) {
-   if (recursion_level <= 0) return RGBColor(0, 0, 0);
+   shared_ptr<Path> result = make_shared<Path>();
+   result->log.push_back(ray_string(ray));
+
+   if (recursion_level <= 0) {
+      result->log.push_back(string("Ignoring. Recursion too deep."));
+      return result;
+   }
 
    // prepare some data needed for lighting
    shared_ptr<Intersection> intersection = scene->cast_ray(ray);
-   if (intersection == NULL) return RGBColor(0, 0, 0);
+   if (intersection == NULL) {
+      result->log.push_back("No intersection.");
+      return result;
+   }
 
    // start with the local shading
    vec3 local_color = local_shading(scene, ray, intersection,
     lighting_mode).to_vec3();
 
    // reflected light
-   vec3 reflected_color = vec3(0, 0, 0);
    float reflection = intersection->target->finish.reflection;
+   shared_ptr<Path> reflected = make_shared<Path>();
    if (reflection > 0) {
       shared_ptr<Ray> reflected_ray = get_reflected_ray(intersection);
-      reflected_color = recursive_ray_lighting(scene, reflected_ray,
-       lighting_mode, recursion_level - 1).to_vec3();
+      reflected = recursive_ray_lighting(scene, reflected_ray,
+       lighting_mode, recursion_level - 1);
+      result->reflected = reflected;
    }
 
    // refracted light
-   vec3 refracted_color = vec3(0, 0, 0);
    float refraction = intersection->target->finish.refraction;
+   shared_ptr<Path> refracted = make_shared<Path>();
    if (refraction > 0) {
       shared_ptr<Ray> transmitted_ray = get_transmitted_ray(intersection);
-      refracted_color = recursive_ray_lighting(scene, transmitted_ray,
-       lighting_mode, recursion_level - 1).to_vec3();
+      refracted = recursive_ray_lighting(scene, transmitted_ray,
+       lighting_mode, recursion_level - 1);
+      refracted->color = RGBColor(refracted->color.to_vec3() * beers_law());
+      result->refracted = refracted;
    }
 
    // filter the final color
@@ -198,20 +215,22 @@ RGBColor recursive_ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
     fresnel_reflectance;
    float transmission_contrib = filter * (1.0f - fresnel_reflectance);
 
-   RGBColor result = RGBColor(local_contrib * local_color +
-                              reflection_contrib * reflected_color +
-                              transmission_contrib * refracted_color);
-   result.saturate();
+   RGBColor color = RGBColor(local_contrib * local_color +
+                             reflection_contrib * reflected->color.to_vec3() +
+                             transmission_contrib * refracted->color.to_vec3());
+   color.saturate();
+   result->color = color;
    return result;
 }
 
-RGBColor ray_lighting(shared_ptr<Scene> scene, vec3 source, vec3 destination,
+shared_ptr<Path> ray_lighting(shared_ptr<Scene> scene, vec3 source, vec3 destination,
  LightingMode lighting_mode) {
    shared_ptr<Ray> ray = make_shared<Ray>(source, destination - source, 0, -1);
    return ray_lighting(scene, ray, lighting_mode);
 }
 
-RGBColor ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
+shared_ptr<Path> ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
  LightingMode lighting_mode) {
-   return recursive_ray_lighting(scene, ray, lighting_mode, MAX_LIGHT_BOUNCES);
+   return recursive_ray_lighting(scene, ray, lighting_mode,
+    MAX_LIGHT_BOUNCES);
 }

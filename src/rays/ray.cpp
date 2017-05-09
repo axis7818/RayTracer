@@ -80,8 +80,25 @@ bool Ray::intersects(shared_ptr<Plane> plane, float &t) {
    return true;
 }
 
-bool Ray::intersects(shared_ptr<Triangle> triangle, float &t) {
-   return false;
+bool Ray::intersects(shared_ptr<Triangle> tri, float &t) {
+   float det_A = tri->det_A(shared_from_this());
+
+   float det_t_num = tri->det_t_num(shared_from_this());
+   t = det_t_num / det_A;
+   if (t < min_t || (max_t > min_t && t > max_t))
+      return false;
+
+   float det_gamma_num = tri->det_gamma_num(shared_from_this());
+   float gamma = det_gamma_num / det_A;
+   if (gamma < 0 || gamma > 1)
+      return false;
+
+   float det_beta_num = tri->det_beta_num(shared_from_this());
+   float beta = det_beta_num / det_A;
+   if (beta < 0 || beta > 1 - gamma)
+      return false;
+
+   return true;
 }
 
 vec3 Ray::point_at(float t) const {

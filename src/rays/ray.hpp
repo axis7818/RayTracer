@@ -3,6 +3,7 @@
 #define _RAY_HPP
 
 #include <glm/geometric.hpp>
+#include <glm/mat3x3.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <memory>

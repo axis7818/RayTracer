@@ -4,9 +4,12 @@
 
 #include <iostream>
 #include <glm/geometric.hpp>
+#include <glm/mat3x3.hpp>
 #include <glm/vec3.hpp>
 #include <utils/printing.hpp>
 #include "geometry.hpp"
+
+class Ray;
 
 class Triangle: public Geometry {
 public:
@@ -14,6 +17,11 @@ public:
 
    virtual glm::vec3 get_normal(glm::vec3 point);
    virtual void print() const;
+
+   float det_A(std::shared_ptr<Ray> ray);
+   float det_beta_num(std::shared_ptr<Ray> ray);
+   float det_gamma_num(std::shared_ptr<Ray> ray);
+   float det_t_num(std::shared_ptr<Ray> ray);
 
    glm::vec3 a;
    glm::vec3 b;

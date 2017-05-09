@@ -4,6 +4,7 @@
 
 #include <lighting/lighting.hpp>
 #include <rays/intersection.hpp>
+#include <rays/path.hpp>
 #include <scene/scene.hpp>
 #include <string>
 #include <utils/parsing/parse.hpp>
@@ -27,6 +28,8 @@ int render(const Scene &scene, const bool use_alt_brdf);
 int pixelray(const Scene &scene, const int x, const int y);
 int firsthit(const Scene &scene, const int x, const int y);
 int pixelcolor(const Scene &scene, const int x, const int y,
+ const bool use_alt_brdf);
+int pixeltrace(const Scene &scene, const int x, const int y,
  const bool use_alt_brdf);
 
 int main(int argc, char **argv) {
@@ -56,7 +59,7 @@ int main(int argc, char **argv) {
    // normal execution
    else if (!strcmp(mode, MODE_RENDER) || !strcmp(mode, MODE_SCENEINFO)
     || !strcmp(mode, MODE_PIXELRAY) || !strcmp(mode, MODE_FIRSTHIT)
-    || !strcmp(mode, MODE_PIXELCOLOR)) {
+    || !strcmp(mode, MODE_PIXELCOLOR) || !strcmp(mode, MODE_PIXELTRACE)) {
       // run in a specific mode after stripping the first two command line args
       return prepare_execute(mode, argc - 2, argv + 2);
    }
@@ -147,7 +150,7 @@ int execute(const char *mode, const Scene &scene, const int width,
    if (!strcmp(mode, MODE_RENDER)) {
       return render(scene, use_alt_brdf);
    } else if (!strcmp(mode, MODE_FIRSTHIT) || !strcmp(mode, MODE_PIXELRAY)
-    || !strcmp(mode, MODE_PIXELCOLOR)) {
+    || !strcmp(mode, MODE_PIXELCOLOR) || !strcmp(mode, MODE_PIXELTRACE)) {
 
       // these modes need an x and y
       bool xy_good = true;
@@ -168,6 +171,8 @@ int execute(const char *mode, const Scene &scene, const int width,
          return pixelray(scene, x, y);
       } else if (!strcmp(mode, MODE_PIXELCOLOR)) {
          return pixelcolor(scene, x, y, use_alt_brdf);
+      } else if (!strcmp(mode, MODE_PIXELTRACE)) {
+         return pixeltrace(scene, x, y, use_alt_brdf);
       }
 
    } else {
@@ -187,7 +192,7 @@ int render(const Scene &scene, const bool use_alt_brdf) {
 
          LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
          RGBColor color = ray_lighting(make_shared<Scene>(scene), ray,
-          lighting_mode);
+          lighting_mode)->color;
 
          unsigned int r = (unsigned int)round(color.r * 255.f);
          unsigned int g = (unsigned int)round(color.g * 255.f);
@@ -262,7 +267,7 @@ int pixelcolor(const Scene &scene, const int x, const int y,
 
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
    RGBColor color = ray_lighting(make_shared<Scene>(scene), ray->source,
-    intersection->intersection_point, lighting_mode);
+    intersection->intersection_point, lighting_mode)->color;
 
    cout << "Pixel: [" << x << ", " << y << "] Ray: ";
    print_vec3(ray->source);
@@ -295,5 +300,17 @@ int pixelcolor(const Scene &scene, const int x, const int y,
       cout << "Color: (" << r << ", " << g << ", " << b << ")" << endl;
    }
 
+   return 0;
+}
+
+int pixeltrace(const Scene &scene, const int x, const int y,
+ const bool use_alt_brdf) {
+   shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
+   LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
+   shared_ptr<Path> path = ray_lighting(make_shared<Scene>(scene), ray, lighting_mode);
+
+   cout << "Pixel: [" << x << ", " << y << "] Color: (" << path->color.r << ", "
+    << path->color.g << ", " << path->color.b << ")" << endl;
+   print_path(path);
    return 0;
 }
