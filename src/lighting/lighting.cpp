@@ -133,14 +133,18 @@ shared_ptr<Ray> get_reflected_ray(shared_ptr<Intersection> intersection) {
    return make_shared<Ray>(intersection->intersection_point, r, 0.001f, 0);
 }
 
-shared_ptr<Ray> get_transmitted_ray(shared_ptr<Intersection> intersection) {
+shared_ptr<Ray> get_transmitted_ray(shared_ptr<Intersection> intersection,
+ bool &entering) {
    // some important values for the calculation
    vec3 d = intersection->ray->dir;
    vec3 N = intersection->target->get_normal(intersection->intersection_point);
    float ior_ratio = 1.0f / intersection->target->finish.ior;
    if (dot(d, N) > 0) { // this means we are leaving the object
+      entering = false;
       ior_ratio = intersection->target->finish.ior;
       N = -N;
+   } else {
+      entering = true;
    }
 
    float root = sqrt(1.0f - pow(ior_ratio, 2) * (1.0f - pow(dot(d, N), 2)));
@@ -156,19 +160,23 @@ float schlicks_approximation(shared_ptr<Intersection> intersection) {
    vec3 v = normalize(intersection->ray->source -
     intersection->intersection_point);
 
-   float F_0 = pow((ior - 1) / (ior + 1), 2);
-   return F_0 + (1.0f - F_0) * pow(1 - dot(n, v), 5);
+   float F_0 = pow((ior - 1.f) / (ior + 1.f), 2);
+   float dot_prod = dot(n, v);
+   if (dot_prod < 0) dot_prod *= -1;
+   float result = F_0 + (1.0f - F_0) * pow(1.0f - dot_prod, 5);
+   return result;
 }
 
-float beers_law() {
-   // TODO: implement
-   return 1.0f;
+vec3 beers_law(vec3 color, float distance) {
+   vec3 absorbance = 0.15f * -distance * (1.f - color);
+   vec3 result = exp(absorbance);
+   return result;
 }
 
-shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
- LightingMode lighting_mode, int recursion_level) {
+shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
+ shared_ptr<Ray> ray, LightingMode lighting_mode, int recursion_level) {
    shared_ptr<Path> result = make_shared<Path>();
-   result->log.push_back(ray_string(ray));
+   // result->log.push_back(ray_string(ray));
 
    if (recursion_level <= 0) {
       result->log.push_back(string("Ignoring. Recursion too deep."));
@@ -181,31 +189,35 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray>
       result->log.push_back("No intersection.");
       return result;
    }
+   // result->log.push_back(intersection_string(intersection));
+   result->distance = length(intersection->intersection_point - ray->source);
 
    // start with the local shading
    vec3 local_color = local_shading(scene, ray, intersection,
     lighting_mode).to_vec3();
+   // result->log.push_back(ray_color_string("Local", RGBColor(local_color)));
 
    // reflected light
    float reflection = intersection->target->finish.reflection;
    shared_ptr<Path> reflected = make_shared<Path>();
-   if (reflection > 0) {
-      shared_ptr<Ray> reflected_ray = get_reflected_ray(intersection);
-      reflected = recursive_ray_lighting(scene, reflected_ray,
-       lighting_mode, recursion_level - 1);
-      result->reflected = reflected;
-   }
+   shared_ptr<Ray> reflected_ray = get_reflected_ray(intersection);
+   reflected = recursive_ray_lighting(scene, reflected_ray,
+    lighting_mode, recursion_level - 1);
+   result->reflected = reflected;
 
    // refracted light
-   float refraction = intersection->target->finish.refraction;
    shared_ptr<Path> refracted = make_shared<Path>();
-   if (refraction > 0) {
-      shared_ptr<Ray> transmitted_ray = get_transmitted_ray(intersection);
-      refracted = recursive_ray_lighting(scene, transmitted_ray,
-       lighting_mode, recursion_level - 1);
-      refracted->color = RGBColor(refracted->color.to_vec3() * beers_law());
-      result->refracted = refracted;
+   bool entering = true;
+   shared_ptr<Ray> transmitted_ray = get_transmitted_ray(intersection,
+    entering);
+   refracted = recursive_ray_lighting(scene, transmitted_ray,
+    lighting_mode, recursion_level - 1);
+   if (entering && refracted->distance > 0) {
+      vec3 beers = beers_law(intersection->target->pigment.color.to_vec3(),
+       refracted->distance);
+      refracted->color = RGBColor(refracted->color.to_vec3() * beers);
    }
+   result->refracted = refracted;
 
    // filter the final color
    float filter = intersection->target->pigment.filter;
@@ -223,8 +235,8 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray>
    return result;
 }
 
-shared_ptr<Path> ray_lighting(shared_ptr<Scene> scene, vec3 source, vec3 destination,
- LightingMode lighting_mode) {
+shared_ptr<Path> ray_lighting(shared_ptr<Scene> scene, vec3 source,
+ vec3 destination, LightingMode lighting_mode) {
    shared_ptr<Ray> ray = make_shared<Ray>(source, destination - source, 0, -1);
    return ray_lighting(scene, ray, lighting_mode);
 }

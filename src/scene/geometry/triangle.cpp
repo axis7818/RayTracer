@@ -8,7 +8,7 @@ using namespace std;
 Triangle::Triangle() : a(0, 0, 0), b(0, 0, 0), c(0, 0, 0) {}
 
 vec3 Triangle::get_normal(vec3 point) {
-   return normalize(cross(b - a, c - a)); // TODO: verify that this faces the right direction
+   return normalize(cross(b - a, c - a));
 }
 
 void Triangle::print() const {

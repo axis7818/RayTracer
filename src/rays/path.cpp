@@ -5,4 +5,5 @@ Path::Path() :
 {
    reflected = NULL;
    refracted = NULL;
+   distance = -1.f;
 }

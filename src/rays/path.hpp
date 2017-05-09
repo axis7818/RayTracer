@@ -15,6 +15,7 @@ public:
    std::vector<std::string> log;
    std::shared_ptr<Path> reflected;
    std::shared_ptr<Path> refracted;
+   float distance;
 };
 
 #endif /* end of include guard: _PATH_HPP */

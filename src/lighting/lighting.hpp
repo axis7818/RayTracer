@@ -6,6 +6,7 @@
 #include <glm/common.hpp>
 #include <glm/geometric.hpp>
 #include <glm/vec3.hpp>
+#include <math.h>
 #include <memory>
 #include <rays/intersection.hpp>
 #include <rays/path.hpp>
