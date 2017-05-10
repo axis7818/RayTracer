@@ -176,7 +176,6 @@ vec3 beers_law(vec3 color, float distance) {
 shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
  shared_ptr<Ray> ray, LightingMode lighting_mode, int recursion_level) {
    shared_ptr<Path> result = make_shared<Path>();
-   // result->log.push_back(ray_string(ray));
 
    if (recursion_level <= 0) {
       result->log.push_back(string("Ignoring. Recursion too deep."));
@@ -189,43 +188,45 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
       result->log.push_back("No intersection.");
       return result;
    }
-   // result->log.push_back(intersection_string(intersection));
    result->distance = length(intersection->intersection_point - ray->source);
 
    // start with the local shading
    vec3 local_color = local_shading(scene, ray, intersection,
     lighting_mode).to_vec3();
-   // result->log.push_back(ray_color_string("Local", RGBColor(local_color)));
 
-   // reflected light
-   float reflection = intersection->target->finish.reflection;
-   shared_ptr<Path> reflected = make_shared<Path>();
-   shared_ptr<Ray> reflected_ray = get_reflected_ray(intersection);
-   reflected = recursive_ray_lighting(scene, reflected_ray,
-    lighting_mode, recursion_level - 1);
-   result->reflected = reflected;
-
-   // refracted light
-   shared_ptr<Path> refracted = make_shared<Path>();
-   bool entering = true;
-   shared_ptr<Ray> transmitted_ray = get_transmitted_ray(intersection,
-    entering);
-   refracted = recursive_ray_lighting(scene, transmitted_ray,
-    lighting_mode, recursion_level - 1);
-   if (entering && refracted->distance > 0) {
-      vec3 beers = beers_law(intersection->target->pigment.color.to_vec3(),
-       refracted->distance);
-      refracted->color = RGBColor(refracted->color.to_vec3() * beers);
-   }
-   result->refracted = refracted;
-
-   // filter the final color
+   // calculate the filter values
    float filter = intersection->target->pigment.filter;
+   float reflection = intersection->target->finish.reflection;
    float fresnel_reflectance = schlicks_approximation(intersection);
    float local_contrib = (1.0f - filter) * (1 - reflection);
    float reflection_contrib = (1.0f - filter) * reflection + filter *
     fresnel_reflectance;
    float transmission_contrib = filter * (1.0f - fresnel_reflectance);
+
+   // reflected light
+   shared_ptr<Path> reflected = make_shared<Path>();
+   if (reflection_contrib > 0) {
+      shared_ptr<Ray> reflected_ray = get_reflected_ray(intersection);
+      reflected = recursive_ray_lighting(scene, reflected_ray,
+       lighting_mode, recursion_level - 1);
+      result->reflected = reflected;
+   }
+
+   // refracted light
+   shared_ptr<Path> refracted = make_shared<Path>();
+   if (transmission_contrib > 0) {
+      bool entering = true;
+      shared_ptr<Ray> transmitted_ray = get_transmitted_ray(intersection,
+       entering);
+      refracted = recursive_ray_lighting(scene, transmitted_ray,
+       lighting_mode, recursion_level - 1);
+      if (entering && refracted->distance > 0) {
+         vec3 beers = beers_law(intersection->target->pigment.color.to_vec3(),
+          refracted->distance);
+         refracted->color = RGBColor(refracted->color.to_vec3() * beers);
+      }
+      result->refracted = refracted;
+   }
 
    RGBColor color = RGBColor(local_contrib * local_color +
                              reflection_contrib * reflected->color.to_vec3() +
