@@ -3,8 +3,9 @@
 #define _INTERSECTION_HPP
 
 #include <glm/vec3.hpp>
-#include <scene/geometry/geometry.hpp>
 #include "ray.hpp"
+
+class Geometry;
 
 class Intersection {
 public:

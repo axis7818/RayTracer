@@ -47,14 +47,20 @@ void Scene::print() const {
 }
 
 shared_ptr<Intersection> Scene::cast_ray(shared_ptr<Ray> ray) const {
-   shared_ptr<Intersection> test = NULL;
-   shared_ptr<Intersection> closest = NULL;
+   shared_ptr<Intersection> test = nullptr;
+   shared_ptr<Intersection> closest = nullptr;
 
    for (size_t i = 0; i < actors.size(); ++i) {
-      test = ray->intersects(static_pointer_cast<Geometry>(actors[i]));
-      if (closest == NULL || (test != NULL && test->t < closest->t)) {
+      shared_ptr<Geometry> geom = static_pointer_cast<Geometry>(actors[i]);
+
+      test = geom->get_intersection(ray);
+      if (closest == nullptr || (test != nullptr && test->t < closest->t))
          closest = test;
-      }
+
+      // test = ray->intersects(static_pointer_cast<Geometry>(actors[i]));
+      // if (closest == NULL || (test != NULL && test->t < closest->t)) {
+      //    closest = test;
+      // }
    }
 
    return closest;

@@ -11,6 +11,28 @@ vec3 Triangle::get_normal(vec3 point) {
    return normalize(cross(b - a, c - a));
 }
 
+shared_ptr<Intersection> Triangle::get_intersection(shared_ptr<Ray> ray) {
+   float det_A = this->det_A(ray);
+
+   // the t value must be valid
+   float det_t_num = this->det_t_num(ray);
+   float t = det_t_num / det_A;
+   if (!ray->t_valid(t)) return nullptr;
+
+   // gamma must be between 0 and 1
+   float det_gamma_num = this->det_gamma_num(ray);
+   float gamma = det_gamma_num / det_A;
+   if (gamma < 0 || gamma > 1) return nullptr;
+
+   // beta must be valid as well
+   float det_beta_num = this->det_beta_num(ray);
+   float beta = det_beta_num / det_A;
+   if (beta < 0 || beta > 1 - gamma) return nullptr;
+
+   // we have an intersection!
+   return make_shared<Intersection>(ray, shared_from_this(), t);
+}
+
 void Triangle::print() const {
    cout << "- Type: Triangle" << endl;
    cout << "- a: ";

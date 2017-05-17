@@ -8,6 +8,7 @@
 #include <rays/ray.hpp>
 #include <scene/actors/actor.hpp>
 #include <scene/actors/camera.hpp>
+#include <scene/geometry/geometry.hpp>
 #include <string>
 #include <utils/printing.hpp>
 #include <vector>
