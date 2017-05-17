@@ -128,6 +128,36 @@ shared_ptr<Light> parse_light(ifstream &file, vector<char> &data) {
    return light;
 }
 
+void check_and_parse_transform(shared_ptr<Geometry> geom, ifstream &file,
+ vector<char> &data) {
+
+   // scale matrix
+   if (just_read_key(data, SCALE_KEY)) {
+      vec3 scale = parse_vec3(file, data);
+      geom->transform = glm::scale(geom->transform, scale);
+   }
+
+   // rotation matrix
+   else if (just_read_key(data, ROTATE_KEY)) {
+      vec3 rotation = parse_vec3(file, data);
+      if (rotation.x)
+         geom->transform = glm::rotate(geom->transform, rotation.x,
+          vec3(1, 0, 0));
+      if (rotation.y)
+         geom->transform = glm::rotate(geom->transform, rotation.y,
+          vec3(0, 1, 0));
+      if (rotation.z)
+         geom->transform = glm::rotate(geom->transform, rotation.z,
+          vec3(0, 0, 1));
+   }
+
+   // translate matrix
+   else if (just_read_key(data, TRANSLATE_KEY)) {
+      vec3 translation = parse_vec3(file, data);
+      geom->transform = glm::translate(geom->transform, translation);
+   }
+}
+
 shared_ptr<Sphere> parse_sphere(ifstream &file, vector<char> &data) {
    shared_ptr<Sphere> sphere =  make_shared<Sphere>();
    char next;
@@ -140,6 +170,9 @@ shared_ptr<Sphere> parse_sphere(ifstream &file, vector<char> &data) {
          sphere->pigment = parse_pigment(file, data);
       } else if (just_read_key(data, FINISH_KEY)) {
          sphere->finish = parse_finish(file, data);
+      } else {
+         check_and_parse_transform(static_pointer_cast<Geometry>(sphere), file,
+          data);
       }
    }
 
@@ -158,6 +191,9 @@ shared_ptr<Plane> parse_plane(ifstream &file, vector<char> &data) {
          plane->pigment = parse_pigment(file, data);
       } else if (just_read_key(data, FINISH_KEY)) {
          plane->finish = parse_finish(file, data);
+      } else {
+         check_and_parse_transform(static_pointer_cast<Geometry>(plane), file,
+          data);
       }
    }
 
@@ -177,6 +213,9 @@ shared_ptr<Triangle> parse_triangle(ifstream &file, vector<char> &data) {
          triangle->pigment = parse_pigment(file, data);
       } else if (just_read_key(data, FINISH_KEY)) {
          triangle->finish = parse_finish(file, data);
+      } else {
+         check_and_parse_transform(static_pointer_cast<Geometry>(triangle),
+          file, data);
       }
    }
 

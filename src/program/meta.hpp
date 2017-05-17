@@ -10,7 +10,7 @@
 #define MODE_FIRSTHIT "firsthit"
 #define MODE_PIXELCOLOR "pixelcolor"
 #define MODE_HELP "help"
-#define MODE_PIXELTRACE "pixeltrace"
+#define MODE_PIXELTRACE "printrays"
 
 #define ALT_BRDF_FLAG "-altbrdf"
 

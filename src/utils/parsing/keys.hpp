@@ -20,10 +20,12 @@
 #define DIFFUSE_KEY "diffuse"
 #define SPECULAR_KEY "specular"
 #define ROUGHNESS_KEY "roughness"
-#define TRANSLATE_KEY "translate"
 #define METALLIC_KEY "metallic"
 #define IOR_KEY "ior"
 #define REFLECTION_KEY "reflection"
 #define REFRACTION_KEY "refraction"
+#define SCALE_KEY "scale"
+#define ROTATE_KEY "rotate"
+#define TRANSLATE_KEY "translate"
 
 #endif /* end of include guard: _KEYS_HPP */

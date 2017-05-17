@@ -2,6 +2,7 @@
 #ifndef _GEOMETRY_HPP
 #define _GEOMETRY_HPP
 
+#include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <iostream>
 #include <materials/finish.hpp>
@@ -18,6 +19,8 @@ public:
 
    Finish finish;
    Pigment pigment;
+   glm::mat4 transform = glm::mat4(1.0f);
+   glm::mat4 inv_transform = glm::mat4(1.0f);
 };
 
 #endif /* end of include guard: _GEOMETRY_HPP */
