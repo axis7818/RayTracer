@@ -56,15 +56,4 @@ void Sphere::print() const {
    print_vec3(this->pigment.color.to_vec3());
    cout << ", Filter: " << this->pigment.filter << endl;
    print_finish(this->finish);
-
-
-   cout << "Transform:" << endl;
-   cout << "  " << this->transform[0][0] << " " << this->transform[1][0]
-    << " " << this->transform[2][0] << " " << this->transform[3][0] << endl;
-   cout << "  " << this->transform[0][1] << " " << this->transform[1][1]
-    << " " << this->transform[2][1] << " " << this->transform[3][1] << endl;
-   cout << "  " << this->transform[0][2] << " " << this->transform[1][2]
-    << " " << this->transform[2][2] << " " << this->transform[3][2] << endl;
-   cout << "  " << this->transform[0][3] << " " << this->transform[1][3]
-    << " " << this->transform[2][3] << " " << this->transform[3][3] << endl;
 }

@@ -18,6 +18,7 @@
 #include <scene/geometry/triangle.hpp>
 #include <string>
 #include <vector>
+#include <utils/printing.hpp>
 #include "keys.hpp"
 #include "parsing_exception.hpp"
 #include "reader.hpp"

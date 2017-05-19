@@ -174,7 +174,8 @@ vec3 beers_law(vec3 color, float distance) {
 }
 
 shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
- shared_ptr<Ray> ray, LightingMode lighting_mode, int recursion_level) {
+ shared_ptr<Ray> ray, LightingMode lighting_mode, int recursion_level,
+ const bool use_fresnel) {
    shared_ptr<Path> result = make_shared<Path>();
 
    if (recursion_level <= 0) {
@@ -197,7 +198,8 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
    // calculate the filter values
    float filter = intersection->target->pigment.filter;
    float reflection = intersection->target->finish.reflection;
-   float fresnel_reflectance = schlicks_approximation(intersection);
+   float fresnel_reflectance = use_fresnel ?
+    schlicks_approximation(intersection) : 0.0f;
    float local_contrib = (1.0f - filter) * (1 - reflection);
    float reflection_contrib = (1.0f - filter) * reflection + filter *
     fresnel_reflectance;
@@ -208,7 +210,7 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
    if (reflection_contrib > 0) {
       shared_ptr<Ray> reflected_ray = get_reflected_ray(intersection);
       reflected = recursive_ray_lighting(scene, reflected_ray,
-       lighting_mode, recursion_level - 1);
+       lighting_mode, recursion_level - 1, use_fresnel);
       result->reflected = reflected;
    }
 
@@ -219,7 +221,7 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
       shared_ptr<Ray> transmitted_ray = get_transmitted_ray(intersection,
        entering);
       refracted = recursive_ray_lighting(scene, transmitted_ray,
-       lighting_mode, recursion_level - 1);
+       lighting_mode, recursion_level - 1, use_fresnel);
       if (entering && refracted->distance > 0) {
          vec3 beers = beers_law(intersection->target->pigment.color.to_vec3(),
           refracted->distance);
@@ -237,13 +239,13 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
 }
 
 shared_ptr<Path> ray_lighting(shared_ptr<Scene> scene, vec3 source,
- vec3 destination, LightingMode lighting_mode) {
+ vec3 destination, LightingMode lighting_mode, const bool use_fresnel) {
    shared_ptr<Ray> ray = make_shared<Ray>(source, destination - source, 0, -1);
-   return ray_lighting(scene, ray, lighting_mode);
+   return ray_lighting(scene, ray, lighting_mode, use_fresnel);
 }
 
 shared_ptr<Path> ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
- LightingMode lighting_mode) {
+ LightingMode lighting_mode, const bool use_fresnel) {
    return recursive_ray_lighting(scene, ray, lighting_mode,
-    MAX_LIGHT_BOUNCES);
+    MAX_LIGHT_BOUNCES, use_fresnel);
 }

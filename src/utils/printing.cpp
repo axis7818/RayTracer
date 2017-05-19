@@ -48,3 +48,13 @@ void print_path(shared_ptr<Path> path) {
    cout << "Primary" << endl;
    print_path(path, 0);
 }
+
+void print_mat4(const mat4 &m) {
+   for (int j = 0; j < 4; ++j) {
+      cout << "  ";
+      for (int i = 0; i < 4; ++i) {
+         cout << m[i][j] << " ";
+      }
+      cout << endl;
+   }
+}

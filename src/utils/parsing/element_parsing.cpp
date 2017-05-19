@@ -178,6 +178,15 @@ shared_ptr<Sphere> parse_sphere(ifstream &file, vector<char> &data) {
 
    sphere->inv_transform = glm::inverse(sphere->transform);
    sphere->normal_matrix = glm::transpose(sphere->inv_transform);
+
+   // cout << "------------ Sphere ------------" << endl;
+   // cout << "--- Transform" << endl;
+   // print_mat4(sphere->transform);
+   // cout << "--- Inverse Transform" << endl;
+   // print_mat4(sphere->inv_transform);
+   // cout << "--- Inverse Transpose" << endl;
+   // print_mat4(sphere->normal_matrix);
+
    return sphere;
 }
 

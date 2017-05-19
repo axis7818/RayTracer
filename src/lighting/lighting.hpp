@@ -26,9 +26,10 @@ struct RGBColor;
 enum LightingMode { BLINN_PHONG, COOK_TORRANCE };
 
 std::shared_ptr<Path> ray_lighting(std::shared_ptr<Scene> scene,
- std::shared_ptr<Ray> ray, LightingMode lighting_mode);
+ std::shared_ptr<Ray> ray, LightingMode lighting_mode, const bool use_fresnel);
 
 std::shared_ptr<Path> ray_lighting(std::shared_ptr<Scene> scene,
- glm::vec3 source, glm::vec3 destination, LightingMode lighting_mode);
+ glm::vec3 source, glm::vec3 destination, LightingMode lighting_mode,
+ const bool use_fresnel);
 
 #endif /* end of include guard: _LIGHTING_HPP */

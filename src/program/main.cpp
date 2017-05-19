@@ -23,15 +23,16 @@ using namespace std;
 int prepare_execute(const char *mode, int argc, char **argv);
 int execute(const char *mode, const Scene &scene, const int width,
  const int height, const int x, const int y, const bool use_alt_brdf,
- const int ss);
+ const int ss, const bool fresnel);
 
-int render(const Scene &scene, const bool use_alt_brdf, const int ss);
+int render(const Scene &scene, const bool use_alt_brdf, const int ss,
+ const bool fresnel);
 int pixelray(const Scene &scene, const int x, const int y);
 int firsthit(const Scene &scene, const int x, const int y);
 int pixelcolor(const Scene &scene, const int x, const int y,
- const bool use_alt_brdf);
+ const bool use_alt_brdf, const bool fresnel);
 int pixeltrace(const Scene &scene, const int x, const int y,
- const bool use_alt_brdf);
+ const bool use_alt_brdf, const bool fresnel);
 
 int main(int argc, char **argv) {
    if (SHOW_HEADER) {
@@ -103,6 +104,13 @@ int get_ss(int argc, char **argv) {
    return ss;
 }
 
+bool use_fresnel(int argc, char **argv) {
+   for (size_t i = 0; i < argc; ++i)
+      if (!strcmp(FRESNEL_FLAG, argv[i]))
+         return true;
+   return false;
+}
+
 // mode should be known, and the following arguments should be:
 //    INPUT_FILE WIDTH HEIGHT X Y
 int prepare_execute(const char *mode, int argc, char **argv) {
@@ -113,6 +121,8 @@ int prepare_execute(const char *mode, int argc, char **argv) {
    get_positive_number(argc, argv, 4, y, true);
    bool use_alt_brdf = using_alt_brdf(argc, argv);
    int ss = get_ss(argc, argv);
+   bool fresnel = use_fresnel(argc, argv);
+
 
    if (SHOW_CMD_ARGS) {
       cout << "width: " << width << endl;
@@ -136,12 +146,13 @@ int prepare_execute(const char *mode, int argc, char **argv) {
       exit(1);
    }
 
-   return execute(mode, *scene, width, height, x, y, use_alt_brdf, ss);
+   return execute(mode, *scene, width, height, x, y, use_alt_brdf, ss,
+    fresnel);
 }
 
 int execute(const char *mode, const Scene &scene, const int width,
  const int height, const int x, const int y, const bool use_alt_brdf,
- const int ss) {
+ const int ss, const bool fresnel) {
    if (!strcmp(mode, MODE_SCENEINFO)) {
       scene.print();
       return 0;
@@ -163,7 +174,7 @@ int execute(const char *mode, const Scene &scene, const int width,
    scene.camera->height = height;
 
    if (!strcmp(mode, MODE_RENDER)) {
-      return render(scene, use_alt_brdf, ss);
+      return render(scene, use_alt_brdf, ss, fresnel);
    } else if (!strcmp(mode, MODE_FIRSTHIT) || !strcmp(mode, MODE_PIXELRAY)
     || !strcmp(mode, MODE_PIXELCOLOR) || !strcmp(mode, MODE_PIXELTRACE)) {
 
@@ -185,9 +196,9 @@ int execute(const char *mode, const Scene &scene, const int width,
       } else if (!strcmp(mode, MODE_PIXELRAY)) {
          return pixelray(scene, x, y);
       } else if (!strcmp(mode, MODE_PIXELCOLOR)) {
-         return pixelcolor(scene, x, y, use_alt_brdf);
+         return pixelcolor(scene, x, y, use_alt_brdf, fresnel);
       } else if (!strcmp(mode, MODE_PIXELTRACE)) {
-         return pixeltrace(scene, x, y, use_alt_brdf);
+         return pixeltrace(scene, x, y, use_alt_brdf, fresnel);
       }
 
    } else {
@@ -196,7 +207,8 @@ int execute(const char *mode, const Scene &scene, const int width,
    return 1;
 }
 
-int render(const Scene &scene, const bool use_alt_brdf, const int ss) {
+int render(const Scene &scene, const bool use_alt_brdf, const int ss,
+ const bool fresnel) {
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
 
    unsigned char *data = new unsigned char[scene.camera->width *
@@ -215,7 +227,7 @@ int render(const Scene &scene, const bool use_alt_brdf, const int ss) {
 
                pixel_color = pixel_color +
                 ray_lighting(make_shared<Scene>(scene), ray,
-                lighting_mode)->color;
+                lighting_mode, fresnel)->color;
             }
          }
 
@@ -288,13 +300,13 @@ int pixelray(const Scene &scene, const int x, const int y) {
 }
 
 int pixelcolor(const Scene &scene, const int x, const int y,
- const bool use_alt_brdf) {
+ const bool use_alt_brdf, const bool fresnel) {
    shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
    shared_ptr<Intersection> intersection = scene.cast_ray(ray);
 
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
    RGBColor color = ray_lighting(make_shared<Scene>(scene), ray->source,
-    intersection->intersection_point, lighting_mode)->color;
+    intersection->intersection_point, lighting_mode, fresnel)->color;
 
    cout << "Pixel: [" << x << ", " << y << "] Ray: ";
    print_vec3(ray->source);
@@ -331,10 +343,11 @@ int pixelcolor(const Scene &scene, const int x, const int y,
 }
 
 int pixeltrace(const Scene &scene, const int x, const int y,
- const bool use_alt_brdf) {
+ const bool use_alt_brdf, const bool fresnel) {
    shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
-   shared_ptr<Path> path = ray_lighting(make_shared<Scene>(scene), ray, lighting_mode);
+   shared_ptr<Path> path = ray_lighting(make_shared<Scene>(scene), ray,
+    lighting_mode, fresnel);
 
    cout << "Pixel: [" << x << ", " << y << "] Color: ("
     << (unsigned int)(path->color.r * 255.f) << ", "
