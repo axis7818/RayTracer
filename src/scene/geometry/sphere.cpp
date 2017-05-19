@@ -14,13 +14,12 @@ vec3 Sphere::get_normal(vec3 point) {
 }
 
 shared_ptr<Intersection> Sphere::get_intersection(shared_ptr<Ray> ray) {
-   shared_ptr<Ray> obj_ray = make_shared<Ray>(ray, inv_transform);
-   vec3 normalized_obj_ray_dir = normalize(obj_ray->dir);
+   shared_ptr<Ray> obj_ray = make_shared<Ray>(ray, this->inv_transform);
 
    // quadratic equation coefficients
-   float a = dot(normalized_obj_ray_dir, normalized_obj_ray_dir);
+   float a = dot(obj_ray->dir, obj_ray->dir);
    vec3 offset = obj_ray->source - position;
-   float b = 2 * dot(normalized_obj_ray_dir, offset);
+   float b = 2 * dot(obj_ray->dir, offset);
    float c = dot(offset, offset) - radius * radius;
 
    // for descriminants < 0, no intersection

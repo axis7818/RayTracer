@@ -134,27 +134,27 @@ void check_and_parse_transform(shared_ptr<Geometry> geom, ifstream &file,
    // scale matrix
    if (just_read_key(data, SCALE_KEY)) {
       vec3 scale = parse_vec3(file, data);
-      geom->transform = glm::scale(geom->transform, scale);
+      geom->transform = glm::scale(mat4(1.0f), scale) * geom->transform;
    }
 
    // rotation matrix
    else if (just_read_key(data, ROTATE_KEY)) {
       vec3 rotation = parse_vec3(file, data);
-      if (rotation.z)
-         geom->transform = glm::rotate(geom->transform, rotation.z,
-          vec3(0, 0, 1));
-      if (rotation.y)
-         geom->transform = glm::rotate(geom->transform, rotation.y,
-          vec3(0, 1, 0));
-      if (rotation.x)
-         geom->transform = glm::rotate(geom->transform, rotation.x,
-          vec3(1, 0, 0));
+      mat4 rot_matrix = mat4(1.0f);
+      rot_matrix = glm::rotate(mat4(1.0f), glm::radians(rotation.z), vec3(0, 0, 1)) *
+       rot_matrix;
+      rot_matrix = glm::rotate(mat4(1.0f), glm::radians(rotation.y), vec3(0, 1, 0)) *
+       rot_matrix;
+      rot_matrix = glm::rotate(mat4(1.0f), glm::radians(rotation.x), vec3(1, 0, 0)) *
+       rot_matrix;
+      geom->transform = rot_matrix * geom->transform;
    }
 
    // translate matrix
    else if (just_read_key(data, TRANSLATE_KEY)) {
       vec3 translation = parse_vec3(file, data);
-      geom->transform = glm::translate(geom->transform, translation);
+      geom->transform = glm::translate(mat4(1.0f), translation) *
+       geom->transform;
    }
 }
 
@@ -178,14 +178,6 @@ shared_ptr<Sphere> parse_sphere(ifstream &file, vector<char> &data) {
 
    sphere->inv_transform = glm::inverse(sphere->transform);
    sphere->normal_matrix = glm::transpose(sphere->inv_transform);
-
-   // cout << "------------ Sphere ------------" << endl;
-   // cout << "--- Transform" << endl;
-   // print_mat4(sphere->transform);
-   // cout << "--- Inverse Transform" << endl;
-   // print_mat4(sphere->inv_transform);
-   // cout << "--- Inverse Transpose" << endl;
-   // print_mat4(sphere->normal_matrix);
 
    return sphere;
 }
