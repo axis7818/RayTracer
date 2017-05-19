@@ -8,7 +8,8 @@ Plane::Plane() :
 {}
 
 vec3 Plane::get_normal(vec3 point) {
-   return normalize(this->normal);
+   vec3 obj_normal = normalize(this->normal);
+   return normal_to_world_space(obj_normal);
 }
 
 shared_ptr<Intersection> Plane::get_intersection(shared_ptr<Ray> ray) {

@@ -140,15 +140,15 @@ void check_and_parse_transform(shared_ptr<Geometry> geom, ifstream &file,
    // rotation matrix
    else if (just_read_key(data, ROTATE_KEY)) {
       vec3 rotation = parse_vec3(file, data);
-      if (rotation.x)
-         geom->transform = glm::rotate(geom->transform, rotation.x,
-          vec3(1, 0, 0));
-      if (rotation.y)
-         geom->transform = glm::rotate(geom->transform, rotation.y,
-          vec3(0, 1, 0));
       if (rotation.z)
          geom->transform = glm::rotate(geom->transform, rotation.z,
           vec3(0, 0, 1));
+      if (rotation.y)
+         geom->transform = glm::rotate(geom->transform, rotation.y,
+          vec3(0, 1, 0));
+      if (rotation.x)
+         geom->transform = glm::rotate(geom->transform, rotation.x,
+          vec3(1, 0, 0));
    }
 
    // translate matrix
@@ -176,6 +176,8 @@ shared_ptr<Sphere> parse_sphere(ifstream &file, vector<char> &data) {
       }
    }
 
+   sphere->inv_transform = glm::inverse(sphere->transform);
+   sphere->normal_matrix = glm::transpose(sphere->inv_transform);
    return sphere;
 }
 
@@ -197,6 +199,8 @@ shared_ptr<Plane> parse_plane(ifstream &file, vector<char> &data) {
       }
    }
 
+   plane->inv_transform = glm::inverse(plane->transform);
+   plane->normal_matrix = glm::transpose(plane->inv_transform);
    return plane;
 }
 
@@ -219,6 +223,8 @@ shared_ptr<Triangle> parse_triangle(ifstream &file, vector<char> &data) {
       }
    }
 
+   triangle->inv_transform = glm::inverse(triangle->transform);
+   triangle->normal_matrix = glm::transpose(triangle->inv_transform);
    return triangle;
 }
 

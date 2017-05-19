@@ -1,5 +1,6 @@
 #include "scene.hpp"
 
+using namespace glm;
 using namespace std;
 
 Scene::Scene(const string filename) :
@@ -52,15 +53,11 @@ shared_ptr<Intersection> Scene::cast_ray(shared_ptr<Ray> ray) const {
 
    for (size_t i = 0; i < actors.size(); ++i) {
       shared_ptr<Geometry> geom = static_pointer_cast<Geometry>(actors[i]);
-
+      
       test = geom->get_intersection(ray);
+
       if (closest == nullptr || (test != nullptr && test->t < closest->t))
          closest = test;
-
-      // test = ray->intersects(static_pointer_cast<Geometry>(actors[i]));
-      // if (closest == NULL || (test != NULL && test->t < closest->t)) {
-      //    closest = test;
-      // }
    }
 
    return closest;

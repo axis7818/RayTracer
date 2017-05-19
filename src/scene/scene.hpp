@@ -3,6 +3,7 @@
 #define _SCENE_HPP
 
 #include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 #include <lighting/light.hpp>
 #include <rays/intersection.hpp>
 #include <rays/ray.hpp>

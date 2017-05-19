@@ -21,6 +21,12 @@ public:
    Pigment pigment;
    glm::mat4 transform = glm::mat4(1.0f);
    glm::mat4 inv_transform = glm::mat4(1.0f);
+   glm::mat4 normal_matrix = glm::mat4(1.0f);
+
+protected:
+   glm::vec3 point_to_obj_space(glm::vec3 world_point);
+   glm::vec3 normal_to_world_space(glm::vec3 obj_normal);
+
 };
 
 #endif /* end of include guard: _GEOMETRY_HPP */
