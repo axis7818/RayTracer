@@ -22,9 +22,10 @@ using namespace std;
 
 int prepare_execute(const char *mode, int argc, char **argv);
 int execute(const char *mode, const Scene &scene, const int width,
- const int height, const int x, const int y, const bool use_alt_brdf);
+ const int height, const int x, const int y, const bool use_alt_brdf,
+ const int ss);
 
-int render(const Scene &scene, const bool use_alt_brdf);
+int render(const Scene &scene, const bool use_alt_brdf, const int ss);
 int pixelray(const Scene &scene, const int x, const int y);
 int firsthit(const Scene &scene, const int x, const int y);
 int pixelcolor(const Scene &scene, const int x, const int y,
@@ -90,6 +91,18 @@ bool using_alt_brdf(int argc, char **argv) {
    return false;
 }
 
+int get_ss(int argc, char **argv) {
+   int ss = 1;
+
+   for (size_t i = 0; i < argc; ++i) {
+      if (!strncmp(SS_COUNT_FLAG, argv[i], 4)) {
+         ss = atoi(argv[i] + 4);
+      }
+   }
+
+   return ss;
+}
+
 // mode should be known, and the following arguments should be:
 //    INPUT_FILE WIDTH HEIGHT X Y
 int prepare_execute(const char *mode, int argc, char **argv) {
@@ -99,6 +112,7 @@ int prepare_execute(const char *mode, int argc, char **argv) {
    get_positive_number(argc, argv, 3, x, true);
    get_positive_number(argc, argv, 4, y, true);
    bool use_alt_brdf = using_alt_brdf(argc, argv);
+   int ss = get_ss(argc, argv);
 
    if (SHOW_CMD_ARGS) {
       cout << "width: " << width << endl;
@@ -122,11 +136,12 @@ int prepare_execute(const char *mode, int argc, char **argv) {
       exit(1);
    }
 
-   return execute(mode, *scene, width, height, x, y, use_alt_brdf);
+   return execute(mode, *scene, width, height, x, y, use_alt_brdf, ss);
 }
 
 int execute(const char *mode, const Scene &scene, const int width,
- const int height, const int x, const int y, const bool use_alt_brdf) {
+ const int height, const int x, const int y, const bool use_alt_brdf,
+ const int ss) {
    if (!strcmp(mode, MODE_SCENEINFO)) {
       scene.print();
       return 0;
@@ -148,7 +163,7 @@ int execute(const char *mode, const Scene &scene, const int width,
    scene.camera->height = height;
 
    if (!strcmp(mode, MODE_RENDER)) {
-      return render(scene, use_alt_brdf);
+      return render(scene, use_alt_brdf, ss);
    } else if (!strcmp(mode, MODE_FIRSTHIT) || !strcmp(mode, MODE_PIXELRAY)
     || !strcmp(mode, MODE_PIXELCOLOR) || !strcmp(mode, MODE_PIXELTRACE)) {
 
@@ -181,25 +196,37 @@ int execute(const char *mode, const Scene &scene, const int width,
    return 1;
 }
 
-int render(const Scene &scene, const bool use_alt_brdf) {
+int render(const Scene &scene, const bool use_alt_brdf, const int ss) {
+   LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
+
    unsigned char *data = new unsigned char[scene.camera->width *
     scene.camera->height * 3];
 
    // cast the rays
    for (int x = 0; x < scene.camera->width; ++x) {
       for (int y = 0; y < scene.camera->height; ++y) {
-         shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
 
-         LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
-         RGBColor color = ray_lighting(make_shared<Scene>(scene), ray,
-          lighting_mode)->color;
+         RGBColor pixel_color = RGBColor(0.0f, 0.0f, 0.0f);
 
-         unsigned int r = (unsigned int)round(color.r * 255.f);
-         unsigned int g = (unsigned int)round(color.g * 255.f);
-         unsigned int b = (unsigned int)round(color.b * 255.f);
+         // super sampling
+         for (int m = 0; m < ss; ++m) {
+            for (int n = 0; n < ss; ++n) {
+               shared_ptr<Ray> ray = scene.camera->make_ray(x, y, m, n, ss);
+
+               pixel_color = pixel_color +
+                ray_lighting(make_shared<Scene>(scene), ray,
+                lighting_mode)->color;
+            }
+         }
+
+         pixel_color /= ss * ss;
+         unsigned int r = (unsigned int)round(pixel_color.r * 255.0f);
+         unsigned int g = (unsigned int)round(pixel_color.g * 255.0f);
+         unsigned int b = (unsigned int)round(pixel_color.b * 255.0f);
 
          size_t index = scene.camera->width * 3 * (scene.camera->height -
           1 - y) + 3 * x;
+
          data[index + 0] = r;
          data[index + 1] = g;
          data[index + 2] = b;

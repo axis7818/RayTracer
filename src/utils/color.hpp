@@ -15,6 +15,20 @@ struct RGBColor {
 
    void saturate();
 
+   RGBColor operator +(const RGBColor &other) {
+      RGBColor result;
+      result.r = this->r + other.r;
+      result.g = this->g + other.g;
+      result.b = this->b + other.b;
+      return result;
+   }
+
+   void operator /=(const float &div) {
+      this->r /= div;
+      this->g /= div;
+      this->b /= div;
+   }
+
    float r;
    float g;
    float b;

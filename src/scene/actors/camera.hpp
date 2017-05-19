@@ -13,6 +13,7 @@ public:
    Camera();
 
    std::shared_ptr<Ray> make_ray(int x, int y);
+   std::shared_ptr<Ray> make_ray(int x, int y, int m, int n, int ss);
    glm::vec3 get_w();
 
    glm::vec3 up;

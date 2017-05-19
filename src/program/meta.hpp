@@ -13,6 +13,7 @@
 #define MODE_PIXELTRACE "printrays"
 
 #define ALT_BRDF_FLAG "-altbrdf"
+#define SS_COUNT_FLAG "-ss="
 
 static const unsigned int mode_count = 5;
 static const char *mode_names[] = {
