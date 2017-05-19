@@ -14,8 +14,8 @@ Ray::Ray(shared_ptr<Ray> ray, mat4 inv_transform) {
    vec4 ray_source = vec4(ray->source, 1.0f);
    vec4 ray_dir = vec4(ray->dir, 0.0f);
 
-   source = inv_transform * ray_source;
-   dir = inv_transform * ray_dir; // not normalized to preserve t's meaning
+   source = vec3(inv_transform * ray_source);
+   dir = vec3(inv_transform * ray_dir); // not normalized to preserve t's meaning
 }
 
 vec3 Ray::point_at(float t) const {
