@@ -227,7 +227,7 @@ int render(const Scene &scene, const bool use_alt_brdf, const int ss,
 
                pixel_color = pixel_color +
                 ray_lighting(make_shared<Scene>(scene), ray,
-                lighting_mode, fresnel)->color;
+                lighting_mode, fresnel, false)->color;
             }
          }
 
@@ -306,7 +306,7 @@ int pixelcolor(const Scene &scene, const int x, const int y,
 
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
    RGBColor color = ray_lighting(make_shared<Scene>(scene), ray->source,
-    intersection->intersection_point, lighting_mode, fresnel)->color;
+    intersection->intersection_point, lighting_mode, fresnel, true)->color;
 
    cout << "Pixel: [" << x << ", " << y << "] Ray: ";
    print_vec3(ray->source);
@@ -347,7 +347,7 @@ int pixeltrace(const Scene &scene, const int x, const int y,
    shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
    shared_ptr<Path> path = ray_lighting(make_shared<Scene>(scene), ray,
-    lighting_mode, fresnel);
+    lighting_mode, fresnel, true);
    path->log.insert(path->log.begin(), "  Iteration type: Primary");
 
    cout << "Pixel: [" << x << ", " << y << "] Color: ("
