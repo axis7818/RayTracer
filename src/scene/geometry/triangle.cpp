@@ -12,26 +12,32 @@ vec3 Triangle::get_normal(vec3 point) {
    return normal_to_world_space(obj_normal);
 }
 
+string Triangle::get_type() {
+   return string("Triangle");
+}
+
 shared_ptr<Intersection> Triangle::get_intersection(shared_ptr<Ray> ray) {
-   float det_A = this->det_A(ray);
+   shared_ptr<Ray> obj_ray = make_shared<Ray>(ray, this->inv_transform);
+
+   float det_A = this->det_A(obj_ray);
 
    // the t value must be valid
-   float det_t_num = this->det_t_num(ray);
+   float det_t_num = this->det_t_num(obj_ray);
    float t = det_t_num / det_A;
-   if (!ray->t_valid(t)) return nullptr;
+   if (!obj_ray->t_valid(t)) return nullptr;
 
    // gamma must be between 0 and 1
-   float det_gamma_num = this->det_gamma_num(ray);
+   float det_gamma_num = this->det_gamma_num(obj_ray);
    float gamma = det_gamma_num / det_A;
    if (gamma < 0 || gamma > 1) return nullptr;
 
    // beta must be valid as well
-   float det_beta_num = this->det_beta_num(ray);
+   float det_beta_num = this->det_beta_num(obj_ray);
    float beta = det_beta_num / det_A;
    if (beta < 0 || beta > 1 - gamma) return nullptr;
 
    // we have an intersection!
-   return make_shared<Intersection>(ray, shared_from_this(), t);
+   return make_shared<Intersection>(ray, obj_ray, shared_from_this(), t);
 }
 
 void Triangle::print() const {

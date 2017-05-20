@@ -17,9 +17,10 @@ public:
    Triangle();
 
    virtual glm::vec3 get_normal(glm::vec3 point);
-   virtual std::shared_ptr<Intersection> get_intersection(std::shared_ptr<Ray> 
+   virtual std::shared_ptr<Intersection> get_intersection(std::shared_ptr<Ray>
     ray);
    virtual void print() const;
+   virtual std::string get_type();
 
    float det_A(std::shared_ptr<Ray> ray);
    float det_beta_num(std::shared_ptr<Ray> ray);

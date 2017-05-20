@@ -12,6 +12,7 @@ public:
 
    virtual void print() const;
 
+   int id = 0;
    glm::vec3 position;
    glm::vec3 scale;
    glm::vec3 rotation;

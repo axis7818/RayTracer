@@ -9,10 +9,11 @@ class Geometry;
 
 class Intersection {
 public:
-   Intersection(std::shared_ptr<Ray> ray, std::shared_ptr<Geometry> target,
-    float t);
+   Intersection(std::shared_ptr<Ray> ray, std::shared_ptr<Ray> obj_ray,
+    std::shared_ptr<Geometry> target, float t);
 
    std::shared_ptr<Ray> ray;
+   std::shared_ptr<Ray> obj_ray;
    const std::shared_ptr<Geometry> target;
    const float t;
    glm::vec3 intersection_point;

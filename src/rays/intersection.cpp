@@ -3,9 +3,9 @@
 using namespace glm;
 using namespace std;
 
-Intersection::Intersection(shared_ptr<Ray> ray, shared_ptr<Geometry> target,
- float t) :
-   ray(ray), target(target), t(t)
+Intersection::Intersection(shared_ptr<Ray> ray, shared_ptr<Ray> obj_ray,
+ shared_ptr<Geometry> target, float t) :
+   ray(ray), obj_ray(obj_ray), target(target), t(t)
 {
    intersection_point = ray->point_at(t);
 }

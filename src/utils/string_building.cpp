@@ -5,36 +5,51 @@ using namespace std;
 
 string ray_string(shared_ptr<Ray> ray) {
    stringstream s;
-   s << "Ray: {" << ray->source.x << " " << ray->source.y << " "
+   s << std::setiosflags(std::ios::fixed);
+   s << std::setprecision(4);
+   s << "             Ray: {" << ray->source.x << " " << ray->source.y << " "
     << ray->source.z << "} -> {" << ray->dir.x << " " << ray->dir.y << " "
     << ray->dir.z << "}";
    return s.str();
 }
 
+string transformed_ray_string(shared_ptr<Ray> ray) {
+   stringstream s;
+   s << std::setiosflags(std::ios::fixed);
+   s << std::setprecision(4);
+   s << " Transformed Ray: {" << ray->source.x << " " << ray->source.y << " "
+    << ray->source.z << "} -> {" << ray->dir.x << " " << ray->dir.y << " "
+    << ray->dir.z << "}";
+   return s.str();
+}
+
+std::string hit_obj_string(std::shared_ptr<Geometry> geom) {
+   stringstream s;
+   s << "      Hit Object: (ID #" << geom->id << " - " << geom->get_type()
+    << ")";
+   return s.str();
+}
+
 string intersection_string(shared_ptr<Intersection> intersection) {
    stringstream s;
+   s << std::setiosflags(std::ios::fixed);
+   s << std::setprecision(4);
 
-   s << "Hit Object (";
-   if (typeid(*intersection->target) == typeid(Plane))
-      s << "Plane";
-   else if (typeid(*intersection->target) == typeid(Sphere))
-      s << "Sphere";
-   else if (typeid(*intersection->target) == typeid(Triangle))
-      s << "Triangle";
-   else
-      cerr << "Unknown target type" << endl;
-   s << ") at T = " << intersection->t << ", Intersection = {"
-    << intersection->intersection_point.x << " "
+   s << "    Intersection: {" << intersection->intersection_point.x << " "
     << intersection->intersection_point.y << " "
-    << intersection->intersection_point.z << "}";
+    << intersection->intersection_point.z << "} at T = "
+    << intersection->t;
 
    return s.str();
 }
 
-string intersection_normal_string(shared_ptr<Intersection> intersection) {
+std::string normal_string(glm::vec3 n) {
    stringstream s;
-   vec3 n = intersection->target->get_normal(intersection->intersection_point);
-   s << "Normal {" << n.x << " " << n.y << " " << n.z << "}";
+   s << std::setiosflags(std::ios::fixed);
+   s << std::setprecision(4);
+
+   s << "          Normal: {" << n.x << " " << n.y << " " << n.z << "}";
+
    return s.str();
 }
 
@@ -48,5 +63,26 @@ string ray_color_string(string prefix, RGBColor color) {
 string named_float_string(string name, float val) {
    stringstream s;
    s << name << ": " << val;
+   return s.str();
+}
+
+std::string named_vec3_string(std::string name, glm::vec3 v) {
+   stringstream s;
+   s << std::setiosflags(std::ios::fixed);
+   s << std::setprecision(4);
+
+   s << name << ": {" << v.x << " " << v.y << " " << v.z << "}";
+
+   return s.str();
+}
+
+std::string contrib_string(float local, float reflect, float refract) {
+   stringstream s;
+   s << std::setiosflags(std::ios::fixed);
+   s << std::setprecision(4);
+
+   s << "   Contributions: " << local << " Local, " << reflect
+    << " Reflection, " << refract << " Transmission";
+
    return s.str();
 }

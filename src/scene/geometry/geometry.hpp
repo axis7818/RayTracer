@@ -17,6 +17,8 @@ public:
    virtual std::shared_ptr<Intersection> get_intersection(std::shared_ptr<Ray>
     ray) = 0;
 
+   virtual std::string get_type() = 0;
+
    Finish finish;
    Pigment pigment;
    glm::mat4 transform = glm::mat4(1.0f);

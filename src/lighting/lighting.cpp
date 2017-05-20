@@ -73,7 +73,8 @@ bool in_shadow(shared_ptr<Scene> scene, shared_ptr<Light> light,
 }
 
 RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
- shared_ptr<Intersection> intersection, LightingMode lighting_mode) {
+ shared_ptr<Intersection> intersection, LightingMode lighting_mode,
+ vector<string> &log, vec3 &ambient, vec3 &diffuse, vec3 &specular) {
    // alias some common properties to save typing
    float k_a = intersection->target->finish.ambient;
    float k_d = intersection->target->finish.diffuse;
@@ -86,13 +87,14 @@ RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
    vec3 obj_color = intersection->target->pigment.color.to_vec3();
 
    // 3 lighting components
-   vec3 ambient = k_a * obj_color;
-   vec3 diffuse = vec3(0, 0, 0);
-   vec3 specular = vec3(0, 0, 0);
+   ambient = k_a * obj_color;
+   diffuse = vec3(0, 0, 0);
+   specular = vec3(0, 0, 0);
 
    // important vectors
    vec3 V = normalize(ray->source - intersection->intersection_point);
    vec3 N = intersection->target->get_normal(intersection->intersection_point);
+   log.push_back(normal_string(N));
 
    // determine the diffuse/specular from each light source
    for (shared_ptr<Light> light : scene->lights) {
@@ -177,6 +179,7 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
  shared_ptr<Ray> ray, LightingMode lighting_mode, int recursion_level,
  const bool use_fresnel) {
    shared_ptr<Path> result = make_shared<Path>();
+   result->log.push_back(ray_string(ray));
 
    if (recursion_level <= 0) {
       result->log.push_back(string("Ignoring. Recursion too deep."));
@@ -189,18 +192,23 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
       result->log.push_back("No intersection.");
       return result;
    }
+   result->log.push_back(transformed_ray_string(intersection->obj_ray));
+   result->log.push_back(hit_obj_string(intersection->target));
+   result->log.push_back(intersection_string(intersection));
    result->distance = length(intersection->intersection_point - ray->source);
 
    // start with the local shading
+   vec3 loc_a, loc_d, loc_s;
    vec3 local_color = local_shading(scene, ray, intersection,
-    lighting_mode).to_vec3();
+    lighting_mode, result->log, loc_a, loc_d, loc_s).to_vec3();
 
    // calculate the filter values
    float filter = intersection->target->pigment.filter;
    float reflection = intersection->target->finish.reflection;
    float fresnel_reflectance = use_fresnel ?
     schlicks_approximation(intersection) : 0.0f;
-   float local_contrib = (1.0f - filter) * (1 - reflection);
+
+   float local_contrib = (1.0f - filter) * (1.0f - reflection);
    float reflection_contrib = (1.0f - filter) * reflection + filter *
     fresnel_reflectance;
    float transmission_contrib = filter * (1.0f - fresnel_reflectance);
@@ -211,6 +219,8 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
       shared_ptr<Ray> reflected_ray = get_reflected_ray(intersection);
       reflected = recursive_ray_lighting(scene, reflected_ray,
        lighting_mode, recursion_level - 1, use_fresnel);
+      reflected->log.insert(reflected->log.begin(),
+       "  Iteration type: Reflection");
       result->reflected = reflected;
    }
 
@@ -222,6 +232,9 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
        entering);
       refracted = recursive_ray_lighting(scene, transmitted_ray,
        lighting_mode, recursion_level - 1, use_fresnel);
+      refracted->log.insert(refracted->log.begin(),
+       "  Iteration type: Refraction");
+
       if (entering && refracted->distance > 0) {
          vec3 beers = beers_law(intersection->target->pigment.color.to_vec3(),
           refracted->distance);
@@ -235,6 +248,17 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
                              transmission_contrib * refracted->color.to_vec3());
    color.saturate();
    result->color = color;
+   result->log.push_back(named_vec3_string(string("     Final Color"),
+    color.to_vec3()));
+   result->log.push_back(named_vec3_string(string("         Ambient"), loc_a));
+   result->log.push_back(named_vec3_string(string("         Diffuse"), loc_d));
+   result->log.push_back(named_vec3_string(string("        Specular"), loc_s));
+   result->log.push_back(named_vec3_string(string("      Reflection"),
+    reflected->color.to_vec3()));
+   result->log.push_back(named_vec3_string(string("      Refraction"),
+    refracted->color.to_vec3()));
+   result->log.push_back(contrib_string(local_contrib, reflection_contrib,
+    transmission_contrib));
    return result;
 }
 

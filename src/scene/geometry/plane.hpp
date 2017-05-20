@@ -16,6 +16,7 @@ public:
    virtual std::shared_ptr<Intersection> get_intersection(std::shared_ptr<Ray>
     ray);
    virtual void print() const;
+   virtual std::string get_type();
 
    glm::vec3 normal;
    float distance;

@@ -65,5 +65,10 @@ shared_ptr<Scene> parse_scene(string filename) {
    scene->lights = lights;
    scene->actors = actors;
 
+   // set actor ids
+   for (int i = 0; i < scene->actors.size(); ++i) {
+      scene->actors[i]->id = i + 1;
+   }
+
    return scene;
 }

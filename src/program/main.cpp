@@ -348,11 +348,12 @@ int pixeltrace(const Scene &scene, const int x, const int y,
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
    shared_ptr<Path> path = ray_lighting(make_shared<Scene>(scene), ray,
     lighting_mode, fresnel);
+   path->log.insert(path->log.begin(), "  Iteration type: Primary");
 
    cout << "Pixel: [" << x << ", " << y << "] Color: ("
-    << (unsigned int)(path->color.r * 255.f) << ", "
-    << (unsigned int)(path->color.g * 255.f) << ", "
-    << (unsigned int)(path->color.b * 255.f) << ")" << endl;
+    << (unsigned int)round(path->color.r * 255.f) << ", "
+    << (unsigned int)round(path->color.g * 255.f) << ", "
+    << (unsigned int)round(path->color.b * 255.f) << ")" << endl;
    print_path(path);
    return 0;
 }

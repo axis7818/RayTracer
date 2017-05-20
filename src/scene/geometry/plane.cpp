@@ -12,22 +12,29 @@ vec3 Plane::get_normal(vec3 point) {
    return normal_to_world_space(obj_normal);
 }
 
+string Plane::get_type() {
+   return string("Plane");
+}
+
 shared_ptr<Intersection> Plane::get_intersection(shared_ptr<Ray> ray) {
    assert(ray != nullptr);
-   float den = dot(ray->dir, normal);
+
+   shared_ptr<Ray> obj_ray = make_shared<Ray>(ray, this->inv_transform);
+
+   float den = dot(obj_ray->dir, normal);
 
    // parallel to the plane, none or infinity intersections
    if (den == 0) return nullptr;
 
    // otherwise, we have 1 intersection point
-   float num = distance - dot(ray->source, normal);
+   float num = distance - dot(obj_ray->source, normal);
    float t = num / den;
 
    // make sure it is a valid t value
-   if (!ray->t_valid(t)) return nullptr;
+   if (!obj_ray->t_valid(t)) return nullptr;
 
    // we have an intersection!
-   return make_shared<Intersection>(ray, shared_from_this(), t);
+   return make_shared<Intersection>(ray, obj_ray, shared_from_this(), t);
 }
 
 void Plane::print() const {

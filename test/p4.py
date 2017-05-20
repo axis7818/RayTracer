@@ -12,7 +12,7 @@ PROGRAM = os.path.join(PROGRAM_DIR, "raytrace")
 OUTPUT_FILE = os.path.join(PROGRAM_DIR, ".tmp.out")
 
 TESTS = []
-for i in range(1, 3):
+for i in range(1, 4):
     TESTS.append((
         i,
         os.path.join(TEST_FILES_DIR, "test{}.args".format(i)),

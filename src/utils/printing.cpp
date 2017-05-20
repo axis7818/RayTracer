@@ -26,27 +26,28 @@ void print_finish(Finish finish) {
 }
 
 void print_path(shared_ptr<Path> path, int level) {
+   cout << "----" << endl;
+
    for (int i = 0; i < path->log.size(); ++i) {
-      for (int j = 0; j < level; ++j) cout << "  ";
+      // for (int j = 0; j < level; ++j) cout << "  ";
       cout << path->log[i] << endl;
    }
 
    if (path->reflected != NULL) {
-      for (int j = 0; j < level; ++j) cout << "  ";
-      cout << "- Reflection" << endl;
+      // for (int j = 0; j < level; ++j) cout << "  ";
       print_path(path->reflected, level + 1);
    }
 
    if (path->refracted != NULL) {
-      for (int j = 0; j < level; ++j) cout << "  ";
-      cout << "- Refraction" << endl;
+      // for (int j = 0; j < level; ++j) cout << "  ";
       print_path(path->refracted, level + 1);
    }
 }
 
 void print_path(shared_ptr<Path> path) {
-   cout << "Primary" << endl;
    print_path(path, 0);
+   cout << endl << endl;
+   cout << "--------------------------------------------------------------------------------" << endl << endl;
 }
 
 void print_mat4(const mat4 &m) {

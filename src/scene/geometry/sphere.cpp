@@ -13,6 +13,10 @@ vec3 Sphere::get_normal(vec3 point) {
    return normal_to_world_space(obj_normal);
 }
 
+string Sphere::get_type() {
+   return string("Sphere");
+}
+
 shared_ptr<Intersection> Sphere::get_intersection(shared_ptr<Ray> ray) {
    shared_ptr<Ray> obj_ray = make_shared<Ray>(ray, this->inv_transform);
 
@@ -42,7 +46,7 @@ shared_ptr<Intersection> Sphere::get_intersection(shared_ptr<Ray> ray) {
    else if (t2_valid)
       t = t2;
 
-   return make_shared<Intersection>(ray, shared_from_this(), t);
+   return make_shared<Intersection>(ray, obj_ray, shared_from_this(), t);
 }
 
 void Sphere::print() const {
