@@ -74,8 +74,7 @@ bool in_shadow(shared_ptr<Scene> scene, shared_ptr<Light> light,
 
 RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
  shared_ptr<Intersection> intersection, LightingMode lighting_mode,
- vector<string> &log, vec3 &ambient, vec3 &diffuse, vec3 &specular,
- bool keep_log) {
+ vec3 &ambient, vec3 &diffuse, vec3 &specular) {
    // alias some common properties to save typing
    float k_a = intersection->target->finish.ambient;
    float k_d = intersection->target->finish.diffuse;
@@ -94,8 +93,7 @@ RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
 
    // important vectors
    vec3 V = normalize(ray->source - intersection->intersection_point);
-   vec3 N = intersection->target->get_normal(intersection->intersection_point);
-   if (keep_log) log.push_back(normal_string(N));
+   vec3 N = intersection->normal;
 
    // determine the diffuse/specular from each light source
    for (shared_ptr<Light> light : scene->lights) {
@@ -131,7 +129,7 @@ RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
 }
 
 shared_ptr<Ray> get_reflected_ray(shared_ptr<Intersection> intersection) {
-   vec3 N = intersection->target->get_normal(intersection->intersection_point);
+   vec3 N = intersection->normal;
    vec3 r = intersection->ray->dir - 2 * (dot(intersection->ray->dir, N)) * N;
    return make_shared<Ray>(intersection->intersection_point, r, 0.001f, 0);
 }
@@ -140,7 +138,7 @@ shared_ptr<Ray> get_transmitted_ray(shared_ptr<Intersection> intersection,
  bool &entering) {
    // some important values for the calculation
    vec3 d = intersection->ray->dir;
-   vec3 N = intersection->target->get_normal(intersection->intersection_point);
+   vec3 N = intersection->normal;
    float ior_ratio = 1.0f / intersection->target->finish.ior;
    if (dot(d, N) > 0) { // this means we are leaving the object
       entering = false;
@@ -159,7 +157,7 @@ shared_ptr<Ray> get_transmitted_ray(shared_ptr<Intersection> intersection,
 
 float schlicks_approximation(shared_ptr<Intersection> intersection) {
    float ior = intersection->target->finish.ior;
-   vec3 n = intersection->target->get_normal(intersection->intersection_point);
+   vec3 n = intersection->normal;
    vec3 v = normalize(intersection->ray->source -
     intersection->intersection_point);
 
@@ -197,13 +195,14 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
       result->log.push_back(transformed_ray_string(intersection->obj_ray));
       result->log.push_back(hit_obj_string(intersection->target));
       result->log.push_back(intersection_string(intersection));
+      result->log.push_back(normal_string(intersection->normal));
    }
    result->distance = length(intersection->intersection_point - ray->source);
 
    // start with the local shading
    vec3 loc_a, loc_d, loc_s;
-   vec3 local_color = local_shading(scene, ray, intersection,
-    lighting_mode, result->log, loc_a, loc_d, loc_s, keep_log).to_vec3();
+   RGBColor local_color = local_shading(scene, ray, intersection,
+    lighting_mode, loc_a, loc_d, loc_s);
 
    // calculate the filter values
    float filter = intersection->target->pigment.filter;
@@ -246,9 +245,13 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
       result->refracted = refracted;
    }
 
-   RGBColor color = RGBColor(local_contrib * local_color +
-                             reflection_contrib * reflected->color.to_vec3() +
-                             transmission_contrib * refracted->color.to_vec3());
+   // RGBColor color = RGBColor(local_contrib * local_color +
+   //                           reflection_contrib * reflected->color.to_vec3() +
+   //                           transmission_contrib * refracted->color.to_vec3());
+
+   RGBColor color = local_color * local_contrib + reflected->color *
+    reflection_contrib + refracted->color * transmission_contrib;
+
    color.saturate();
    result->color = color;
    if (keep_log) {

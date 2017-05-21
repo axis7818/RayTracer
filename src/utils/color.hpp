@@ -23,6 +23,14 @@ struct RGBColor {
       return result;
    }
 
+   RGBColor operator *(const float &f) {
+      RGBColor result;
+      result.r = this->r * f;
+      result.g = this->g * f;
+      result.b = this->b * f;
+      return result;
+   }
+
    void operator /=(const float &div) {
       this->r /= div;
       this->g /= div;

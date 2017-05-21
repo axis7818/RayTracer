@@ -17,6 +17,7 @@ public:
    const std::shared_ptr<Geometry> target;
    const float t;
    glm::vec3 intersection_point;
+   glm::vec3 normal;
 };
 
 #endif /* end of include guard: _INTERSECTION_HPP */

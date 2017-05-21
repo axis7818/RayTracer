@@ -1,5 +1,7 @@
 #include "intersection.hpp"
 
+#include <scene/geometry/geometry.hpp>
+
 using namespace glm;
 using namespace std;
 
@@ -8,4 +10,5 @@ Intersection::Intersection(shared_ptr<Ray> ray, shared_ptr<Ray> obj_ray,
    ray(ray), obj_ray(obj_ray), target(target), t(t)
 {
    intersection_point = ray->point_at(t);
+   normal = target->get_normal(intersection_point);
 }
