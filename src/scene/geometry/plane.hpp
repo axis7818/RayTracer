@@ -15,6 +15,7 @@ public:
    virtual glm::vec3 get_normal(glm::vec3 point);
    virtual std::shared_ptr<Intersection> get_intersection(std::shared_ptr<Ray>
     ray);
+   virtual std::shared_ptr<AABox> get_bounding_box() { return nullptr; }
    virtual void print() const;
    virtual std::string get_type();
 

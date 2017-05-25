@@ -40,6 +40,35 @@ shared_ptr<Intersection> Triangle::get_intersection(shared_ptr<Ray> ray) {
    return make_shared<Intersection>(ray, obj_ray, shared_from_this(), t);
 }
 
+std::shared_ptr<AABox> Triangle::get_bounding_box() {
+   vector<vec3> points;
+   points.push_back(b);
+   points.push_back(c);
+
+   vec3 min = a;
+   vec3 max = a;
+   for (int i = 1; i < points.size(); ++i) {
+      if (points[i].x < min.x)
+         min.x = points[i].x;
+      if (points[i].x > max.x)
+         max.x = points[i].x;
+
+      if (points[i].y < min.y)
+         min.y = points[i].y;
+      if (points[i].y > max.y)
+         max.y = points[i].y;
+
+      if (points[i].z < min.z)
+         min.z = points[i].z;
+      if (points[i].z > max.x)
+         max.z = points[i].z;
+   }
+
+   shared_ptr<AABox> result = make_shared<AABox>(min, max);
+   result->transform_as_bounding_box(transform);
+   return result;
+}
+
 void Triangle::print() const {
    cout << "- Type: Triangle" << endl;
    cout << "- a: ";

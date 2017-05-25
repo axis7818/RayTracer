@@ -13,6 +13,7 @@
 #include <materials/finish.hpp>
 #include <materials/pigment.hpp>
 #include <scene/actors/camera.hpp>
+#include <scene/geometry/aabox.hpp>
 #include <scene/geometry/sphere.hpp>
 #include <scene/geometry/plane.hpp>
 #include <scene/geometry/triangle.hpp>

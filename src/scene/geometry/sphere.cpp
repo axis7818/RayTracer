@@ -49,6 +49,24 @@ shared_ptr<Intersection> Sphere::get_intersection(shared_ptr<Ray> ray) {
    return make_shared<Intersection>(ray, obj_ray, shared_from_this(), t);
 }
 
+shared_ptr<AABox> Sphere::get_bounding_box() {
+   vec3 min_point = vec3(
+      position.x - radius,
+      position.y - radius,
+      position.z - radius
+   );
+
+   vec3 max_point = vec3(
+      position.x + radius,
+      position.y + radius,
+      position.z + radius
+   );
+
+   shared_ptr<AABox> result = make_shared<AABox>(min_point, max_point);
+   result->transform_as_bounding_box(transform);
+   return result;
+}
+
 void Sphere::print() const {
    cout << "- Type: Sphere" << endl;
    cout << "- Center: ";

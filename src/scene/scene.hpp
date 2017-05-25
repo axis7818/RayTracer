@@ -22,11 +22,13 @@ public:
 
    void print() const;
    std::shared_ptr<Intersection> cast_ray(std::shared_ptr<Ray> ray) const;
+   void build_shapes_from_actors();
 
    std::string filename;
    std::shared_ptr<Camera> camera;
    std::vector<std::shared_ptr<Light>> lights;
    std::vector<std::shared_ptr<Actor>> actors;
+   std::vector<std::shared_ptr<Geometry>> shapes;
 };
 
 #endif /* end of include guard: _SCENE_HPP */

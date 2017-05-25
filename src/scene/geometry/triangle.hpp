@@ -8,6 +8,7 @@
 #include <glm/mat3x3.hpp>
 #include <glm/vec3.hpp>
 #include <utils/printing.hpp>
+#include "aabox.hpp"
 #include "geometry.hpp"
 
 class Ray;
@@ -19,6 +20,7 @@ public:
    virtual glm::vec3 get_normal(glm::vec3 point);
    virtual std::shared_ptr<Intersection> get_intersection(std::shared_ptr<Ray>
     ray);
+   virtual std::shared_ptr<AABox> get_bounding_box();
    virtual void print() const;
    virtual std::string get_type();
 

@@ -25,3 +25,34 @@ vec3 Ray::point_at(float t) const {
 bool Ray::t_valid(float t) {
    return t >= min_t && (max_t <= min_t || t <= max_t);
 }
+
+float Ray::t_for_axis_plane(float val, int plane) {
+   plane = plane % 3;
+
+   float d = 0.0f;
+   float p = 0.0f;
+
+   switch (plane) {
+
+      case 0:
+         p = source.x;
+         d = dir.x;
+         break;
+
+      case 1:
+         p = source.y;
+         d = dir.y;
+         break;
+
+      case 2:
+         p = source.z;
+         d = dir.z;
+         break;
+
+   }
+
+   if (d == 0.0f)
+      return std::numeric_limits<float>::infinity();
+
+   return (val - p) / d;
+}

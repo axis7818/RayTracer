@@ -7,6 +7,29 @@ Scene::Scene(const string filename) :
    filename(filename)
 {}
 
+shared_ptr<Intersection> Scene::cast_ray(shared_ptr<Ray> ray) const {
+   shared_ptr<Intersection> test = nullptr;
+   shared_ptr<Intersection> closest = nullptr;
+
+   for (shared_ptr<Geometry> geom : shapes) {
+      test = geom->get_intersection(ray);
+
+      if (closest == nullptr || (test != nullptr && test->t < closest->t))
+         closest = test;
+   }
+
+   return closest;
+}
+
+void Scene::build_shapes_from_actors() {
+   // TODO: implement the building of the BVH, for now, just copy over
+
+   for (shared_ptr<Actor> actor : actors) {
+      shared_ptr<Geometry> geom = static_pointer_cast<Geometry>(actor);
+      shapes.push_back(geom);
+   }
+}
+
 void Scene::print() const {
    // camera
    cout << "Camera:" << endl;
@@ -45,20 +68,4 @@ void Scene::print() const {
       cout << endl << "Object[" << i << "]:" << endl;
       actor->print();
    }
-}
-
-shared_ptr<Intersection> Scene::cast_ray(shared_ptr<Ray> ray) const {
-   shared_ptr<Intersection> test = nullptr;
-   shared_ptr<Intersection> closest = nullptr;
-
-   for (size_t i = 0; i < actors.size(); ++i) {
-      shared_ptr<Geometry> geom = static_pointer_cast<Geometry>(actors[i]);
-      
-      test = geom->get_intersection(ray);
-
-      if (closest == nullptr || (test != nullptr && test->t < closest->t))
-         closest = test;
-   }
-
-   return closest;
 }
