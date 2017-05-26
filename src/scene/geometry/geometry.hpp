@@ -20,6 +20,7 @@ public:
    virtual std::shared_ptr<Intersection> get_intersection(std::shared_ptr<Ray>
     ray) = 0;
    virtual std::shared_ptr<AABox> get_bounding_box() = 0;
+   virtual glm::vec3 get_center() = 0;
 
    virtual std::string get_type() = 0;
 
@@ -28,6 +29,9 @@ public:
    glm::mat4 transform = glm::mat4(1.0f);
    glm::mat4 inv_transform = glm::mat4(1.0f);
    glm::mat4 normal_matrix = glm::mat4(1.0f);
+
+   glm::vec3 center;
+   bool in_bvh = true;
 
 protected:
    glm::vec3 point_to_obj_space(glm::vec3 world_point);

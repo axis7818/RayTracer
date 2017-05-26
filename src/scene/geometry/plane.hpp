@@ -18,6 +18,7 @@ public:
    virtual std::shared_ptr<AABox> get_bounding_box() { return nullptr; }
    virtual void print() const;
    virtual std::string get_type();
+   virtual glm::vec3 get_center();
 
    glm::vec3 normal;
    float distance;

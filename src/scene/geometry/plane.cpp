@@ -5,7 +5,9 @@ using namespace std;
 
 Plane::Plane() :
    normal(0, 1, 0), distance(0)
-{}
+{
+   in_bvh = false;
+}
 
 vec3 Plane::get_normal(vec3 point) {
    vec3 obj_normal = normalize(this->normal);
@@ -35,6 +37,15 @@ shared_ptr<Intersection> Plane::get_intersection(shared_ptr<Ray> ray) {
 
    // we have an intersection!
    return make_shared<Intersection>(ray, obj_ray, shared_from_this(), t);
+}
+
+vec3 Plane::get_center() {
+   vec4 point = vec4(
+      distance * normal,
+      1.0f
+   );
+
+   return vec3(transform * point);
 }
 
 void Plane::print() const {

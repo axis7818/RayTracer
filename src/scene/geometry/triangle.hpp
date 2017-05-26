@@ -23,6 +23,7 @@ public:
    virtual std::shared_ptr<AABox> get_bounding_box();
    virtual void print() const;
    virtual std::string get_type();
+   virtual glm::vec3 get_center();
 
    float det_A(std::shared_ptr<Ray> ray);
    float det_beta_num(std::shared_ptr<Ray> ray);

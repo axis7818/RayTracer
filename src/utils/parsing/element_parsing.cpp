@@ -178,7 +178,7 @@ shared_ptr<Sphere> parse_sphere(ifstream &file, vector<char> &data) {
 
    sphere->inv_transform = glm::inverse(sphere->transform);
    sphere->normal_matrix = glm::transpose(sphere->inv_transform);
-
+   sphere->center = sphere->get_center();
    return sphere;
 }
 
@@ -202,6 +202,7 @@ shared_ptr<Plane> parse_plane(ifstream &file, vector<char> &data) {
 
    plane->inv_transform = glm::inverse(plane->transform);
    plane->normal_matrix = glm::transpose(plane->inv_transform);
+   plane->center = plane->get_center();
    return plane;
 }
 
@@ -226,6 +227,7 @@ shared_ptr<Triangle> parse_triangle(ifstream &file, vector<char> &data) {
 
    triangle->inv_transform = glm::inverse(triangle->transform);
    triangle->normal_matrix = glm::transpose(triangle->inv_transform);
+   triangle->center = triangle->get_center();
    return triangle;
 }
 

@@ -69,6 +69,17 @@ std::shared_ptr<AABox> Triangle::get_bounding_box() {
    return result;
 }
 
+vec3 Triangle::get_center() {
+   vec4 center = vec4(
+      (a.x + b.x + c.x) / 3.0f,
+      (a.y + b.y + c.y) / 3.0f,
+      (a.z + b.z + c.z) / 3.0f,
+      1.0f
+   );
+
+   return vec3(transform * center);
+}
+
 void Triangle::print() const {
    cout << "- Type: Triangle" << endl;
    cout << "- a: ";

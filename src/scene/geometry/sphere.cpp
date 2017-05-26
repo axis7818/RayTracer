@@ -67,6 +67,11 @@ shared_ptr<AABox> Sphere::get_bounding_box() {
    return result;
 }
 
+vec3 Sphere::get_center() {
+   vec4 point = vec4(position, 1.0f);
+   return vec3(transform * point);
+}
+
 void Sphere::print() const {
    cout << "- Type: Sphere" << endl;
    cout << "- Center: ";

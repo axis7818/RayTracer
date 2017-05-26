@@ -22,12 +22,19 @@ shared_ptr<Intersection> Scene::cast_ray(shared_ptr<Ray> ray) const {
 }
 
 void Scene::build_shapes_from_actors() {
-   // TODO: implement the building of the BVH, for now, just copy over
+
+   vector<shared_ptr<Geometry>> bvh_shapes;
 
    for (shared_ptr<Actor> actor : actors) {
       shared_ptr<Geometry> geom = static_pointer_cast<Geometry>(actor);
-      shapes.push_back(geom);
+      if (!geom->in_bvh) {
+         shapes.push_back(geom);
+      } else {
+         bvh_shapes.push_back(geom);
+      }
    }
+
+   shapes.push_back(make_shared<BVH>(bvh_shapes, 0));
 }
 
 void Scene::print() const {

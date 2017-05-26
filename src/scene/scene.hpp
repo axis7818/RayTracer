@@ -9,6 +9,7 @@
 #include <rays/ray.hpp>
 #include <scene/actors/actor.hpp>
 #include <scene/actors/camera.hpp>
+#include <scene/geometry/bvh.hpp>
 #include <scene/geometry/geometry.hpp>
 #include <string>
 #include <utils/printing.hpp>
@@ -29,6 +30,7 @@ public:
    std::vector<std::shared_ptr<Light>> lights;
    std::vector<std::shared_ptr<Actor>> actors;
    std::vector<std::shared_ptr<Geometry>> shapes;
+
 };
 
 #endif /* end of include guard: _SCENE_HPP */
