@@ -41,28 +41,16 @@ shared_ptr<Intersection> Triangle::get_intersection(shared_ptr<Ray> ray) {
 }
 
 std::shared_ptr<AABox> Triangle::get_bounding_box() {
-   vector<vec3> points;
-   points.push_back(b);
-   points.push_back(c);
-
-   vec3 min = a;
-   vec3 max = a;
-   for (int i = 1; i < points.size(); ++i) {
-      if (points[i].x < min.x)
-         min.x = points[i].x;
-      if (points[i].x > max.x)
-         max.x = points[i].x;
-
-      if (points[i].y < min.y)
-         min.y = points[i].y;
-      if (points[i].y > max.y)
-         max.y = points[i].y;
-
-      if (points[i].z < min.z)
-         min.z = points[i].z;
-      if (points[i].z > max.x)
-         max.z = points[i].z;
-   }
+   vec3 min = vec3(
+      glm::min(a.x, glm::min(b.x, c.x)),
+      glm::min(a.y, glm::min(b.y, c.y)),
+      glm::min(a.z, glm::min(b.z, c.z))
+   );
+   vec3 max = vec3(
+      glm::max(a.x, glm::max(b.x, c.x)),
+      glm::max(a.y, glm::max(b.y, c.y)),
+      glm::max(a.z, glm::max(b.z, c.z))
+   );
 
    shared_ptr<AABox> result = make_shared<AABox>(min, max);
    result->transform_as_bounding_box(transform);

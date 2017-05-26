@@ -23,7 +23,7 @@ using namespace std;
 int prepare_execute(const char *mode, int argc, char **argv);
 int execute(const char *mode, const Scene &scene, const int width,
  const int height, const int x, const int y, const bool use_alt_brdf,
- const int ss, const bool fresnel);
+ const int ss, const bool fresnel, const bool use_bvh);
 
 int render(const Scene &scene, const bool use_alt_brdf, const int ss,
  const bool fresnel);
@@ -111,6 +111,13 @@ bool use_fresnel(int argc, char **argv) {
    return false;
 }
 
+bool using_bvh(int argc, char **argv) {
+   for (size_t i = 0; i < argc; ++i)
+      if (!strcmp(NO_BVH_FLAG, argv[i]))
+         return false;
+   return true;
+}
+
 // mode should be known, and the following arguments should be:
 //    INPUT_FILE WIDTH HEIGHT X Y
 int prepare_execute(const char *mode, int argc, char **argv) {
@@ -122,7 +129,7 @@ int prepare_execute(const char *mode, int argc, char **argv) {
    bool use_alt_brdf = using_alt_brdf(argc, argv);
    int ss = get_ss(argc, argv);
    bool fresnel = use_fresnel(argc, argv);
-
+   bool use_bvh = using_bvh(argc, argv);
 
    if (SHOW_CMD_ARGS) {
       cout << "width: " << width << endl;
@@ -137,6 +144,7 @@ int prepare_execute(const char *mode, int argc, char **argv) {
    if (argc > 0) {
       try {
          scene = parse_scene(argv[0]);
+         scene->build_shapes_from_actors(use_bvh);
       } catch (ParsingException &pe) {
          cerr << pe.what() << endl;
          exit(1);
@@ -147,12 +155,12 @@ int prepare_execute(const char *mode, int argc, char **argv) {
    }
 
    return execute(mode, *scene, width, height, x, y, use_alt_brdf, ss,
-    fresnel);
+    fresnel, use_bvh);
 }
 
 int execute(const char *mode, const Scene &scene, const int width,
  const int height, const int x, const int y, const bool use_alt_brdf,
- const int ss, const bool fresnel) {
+ const int ss, const bool fresnel, const bool use_bvh) {
    if (!strcmp(mode, MODE_SCENEINFO)) {
       scene.print();
       return 0;

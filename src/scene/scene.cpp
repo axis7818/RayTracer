@@ -21,20 +21,21 @@ shared_ptr<Intersection> Scene::cast_ray(shared_ptr<Ray> ray) const {
    return closest;
 }
 
-void Scene::build_shapes_from_actors() {
+void Scene::build_shapes_from_actors(const bool use_bvh) {
 
    vector<shared_ptr<Geometry>> bvh_shapes;
 
    for (shared_ptr<Actor> actor : actors) {
       shared_ptr<Geometry> geom = static_pointer_cast<Geometry>(actor);
-      if (!geom->in_bvh) {
+      if (!geom->in_bvh || !use_bvh) {
          shapes.push_back(geom);
       } else {
          bvh_shapes.push_back(geom);
       }
    }
 
-   shapes.push_back(make_shared<BVH>(bvh_shapes, 0));
+   if (bvh_shapes.size() > 0)
+      shapes.push_back(make_shared<BVH>(bvh_shapes, 0));
 }
 
 void Scene::print() const {

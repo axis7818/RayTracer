@@ -23,7 +23,7 @@ public:
 
    void print() const;
    std::shared_ptr<Intersection> cast_ray(std::shared_ptr<Ray> ray) const;
-   void build_shapes_from_actors();
+   void build_shapes_from_actors(const bool use_bvh);
 
    std::string filename;
    std::shared_ptr<Camera> camera;

@@ -11,18 +11,35 @@ BVH::BVH(vector<shared_ptr<Geometry>> geoms, int axis) {
       return;
    }
 
-   // TODO: sort on axis
+   sort_on_axis(geoms, axis);
 
    // split into two vectors
    int half = geoms.size() / 2;
    vector<shared_ptr<Geometry>> one(geoms.begin(), geoms.begin() + half);
    vector<shared_ptr<Geometry>> two(geoms.begin() + half, geoms.end());
 
-   // recursive
+   // recurse
    axis = (axis + 1) % 3;
    shapes.push_back(make_shared<BVH>(one, axis));
    shapes.push_back(make_shared<BVH>(two, axis));
    set_boundary();
+}
+
+bool x_comp(shared_ptr<Geometry> a, shared_ptr<Geometry> b) {
+   return a->center.x < b->center.x;
+}
+
+bool y_comp(shared_ptr<Geometry> a, shared_ptr<Geometry> b) {
+   return a->center.y < b->center.y;
+}
+
+bool z_comp(shared_ptr<Geometry> a, shared_ptr<Geometry> b) {
+   return a->center.z < b->center.z;
+}
+
+void BVH::sort_on_axis(vector<shared_ptr<Geometry>> shapes, int axis) {
+   sort(shapes.begin(), shapes.end(),
+      axis == 0 ? x_comp : axis == 1 ? y_comp : z_comp);
 }
 
 void BVH::set_boundary() {

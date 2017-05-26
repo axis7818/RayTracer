@@ -70,6 +70,5 @@ shared_ptr<Scene> parse_scene(string filename) {
       scene->actors[i]->id = i + 1;
    }
 
-   scene->build_shapes_from_actors();
    return scene;
 }

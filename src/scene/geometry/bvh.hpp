@@ -2,6 +2,7 @@
 #ifndef _BVH_HPP
 #define _BVH_HPP
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 #include "aabox.hpp"
@@ -20,6 +21,8 @@ public:
 
 private:
    void set_boundary();
+
+   void sort_on_axis(std::vector<std::shared_ptr<Geometry>> shapes, int axis);
 
 };
 
