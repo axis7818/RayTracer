@@ -11,4 +11,11 @@ Intersection::Intersection(shared_ptr<Ray> ray, shared_ptr<Ray> obj_ray,
 {
    intersection_point = ray->point_at(t);
    normal = target->get_normal(intersection_point);
+
+   // special case for triangle
+   if (target->get_type() == "Triangle") {
+      if (dot(normal, ray->dir) > 0) {
+         normal = -normal;
+      }
+   }
 }

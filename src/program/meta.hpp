@@ -15,7 +15,7 @@
 #define ALT_BRDF_FLAG "-altbrdf"
 #define SS_COUNT_FLAG "-ss="
 #define FRESNEL_FLAG "-fresnel"
-#define NO_BVH_FLAG "-nobvh"
+#define SDS_FLAG "-sds"
 
 static const unsigned int mode_count = 5;
 static const char *mode_names[] = {

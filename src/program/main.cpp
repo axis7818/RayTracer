@@ -113,9 +113,9 @@ bool use_fresnel(int argc, char **argv) {
 
 bool using_bvh(int argc, char **argv) {
    for (size_t i = 0; i < argc; ++i)
-      if (!strcmp(NO_BVH_FLAG, argv[i]))
-         return false;
-   return true;
+      if (!strcmp(SDS_FLAG, argv[i]))
+         return true;
+   return false;
 }
 
 // mode should be known, and the following arguments should be:
@@ -278,10 +278,10 @@ int firsthit(const Scene &scene, const int x, const int y) {
    bool is_geometry = false;
    cout << endl << "T = " << intersection->t << endl;
    cout << "Object Type: ";
-   if (typeid(*intersection->target) == typeid(Sphere)) {
+   if (intersection->target->get_type() == "Sphere") {
       cout << "Sphere" << endl;
       is_geometry = true;
-   } else if (typeid(*intersection->target) == typeid(Plane)) {
+   } else if (intersection->target->get_type() == "Plane") {
       cout << "Plane" << endl;
       is_geometry = true;
    }
@@ -330,10 +330,10 @@ int pixelcolor(const Scene &scene, const int x, const int y,
    bool is_geometry = false;
    cout << "T = " << intersection->t << endl;
    cout << "Object Type: ";
-   if (typeid(*intersection->target) == typeid(Sphere)) {
+   if (intersection->target->get_type() == "Sphere") {
       cout << "Sphere" << endl;
       is_geometry = true;
-   } else if (typeid(*intersection->target) == typeid(Plane)) {
+   } else if (intersection->target->get_type() == "Plane") {
       cout << "Plane" << endl;
       is_geometry = true;
    }

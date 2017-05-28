@@ -25,7 +25,7 @@ if len(sys.argv) >= 2:
         MODE = 2
 
 def run(pov, with_alt_brdf):
-    command = [PROGRAM, "render", pov, "640", "480"]
+    command = [PROGRAM, "render", pov, "640", "480", "-sds"]
     if with_alt_brdf:
         command += ["-altbrdf"]
     call(command)

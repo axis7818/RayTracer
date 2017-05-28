@@ -9,6 +9,7 @@ Triangle::Triangle() : a(0, 0, 0), b(0, 0, 0), c(0, 0, 0) {}
 
 vec3 Triangle::get_normal(vec3 point) {
    vec3 obj_normal = normalize(cross(b - a, c - a));
+
    return normal_to_world_space(obj_normal);
 }
 
