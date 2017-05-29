@@ -245,10 +245,6 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
       result->refracted = refracted;
    }
 
-   // RGBColor color = RGBColor(local_contrib * local_color +
-   //                           reflection_contrib * reflected->color.to_vec3() +
-   //                           transmission_contrib * refracted->color.to_vec3());
-
    RGBColor color = local_color * local_contrib + reflected->color *
     reflection_contrib + refracted->color * transmission_contrib;
 
