@@ -222,6 +222,8 @@ int render(const Scene &scene, const bool use_alt_brdf, const int ss,
    unsigned char *data = new unsigned char[scene.camera->width *
     scene.camera->height * 3];
 
+   // int total_pixels = scene.camera->width * scene.camera->height;
+
    // cast the rays
    for (int x = 0; x < scene.camera->width; ++x) {
       for (int y = 0; y < scene.camera->height; ++y) {
@@ -250,6 +252,9 @@ int render(const Scene &scene, const bool use_alt_brdf, const int ss,
          data[index + 0] = r;
          data[index + 1] = g;
          data[index + 2] = b;
+
+         // int pixel_num = x * scene.camera->height + y + 1;
+         // cout << "Pixel " << pixel_num << " of " << total_pixels << endl;
       }
    }
 
