@@ -231,6 +231,30 @@ shared_ptr<Triangle> parse_triangle(ifstream &file, vector<char> &data) {
    return triangle;
 }
 
+shared_ptr<AABox> parse_aabox(ifstream &file, vector<char> &data) {
+   shared_ptr<AABox> box = make_shared<AABox>();
+   char next;
+
+   _start_block(file, data);
+   box->min = parse_vec3(file, data);
+   box->max = parse_vec3(file, data);
+   while (read_next(file, data, next) && next != '}') {
+      if (just_read_key(data, PIGMENT_KEY)) {
+         box->pigment = parse_pigment(file, data);
+      } else if (just_read_key(data, FINISH_KEY)) {
+         box->finish = parse_finish(file, data);
+      } else {
+         check_and_parse_transform(static_pointer_cast<Geometry>(box),
+            file, data);
+      }
+   }
+
+   box->inv_transform = glm::inverse(box->transform);
+   box->normal_matrix = glm::transpose(box->inv_transform);
+   box->center = box->get_center();
+   return box;
+}
+
 Pigment parse_pigment(ifstream &file, vector<char> &data) {
    Pigment pigment;
    char next;

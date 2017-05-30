@@ -7,6 +7,7 @@
 #define SPHERE_KEY "sphere"
 #define PLANE_KEY "plane"
 #define TRIANGLE_KEY "triangle"
+#define AABOX_KEY "box"
 
 #define LOCATION_KEY "location"
 #define UP_KEY "up"

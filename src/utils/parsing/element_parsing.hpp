@@ -38,6 +38,8 @@ std::shared_ptr<Plane> parse_plane(std::ifstream &file,
  std::vector<char> &data);
 std::shared_ptr<Triangle> parse_triangle(std::ifstream &file,
  std::vector<char> &data);
+std::shared_ptr<AABox> parse_aabox(std::ifstream &file,
+ std::vector<char> &data);
 Pigment parse_pigment(std::ifstream &file, std::vector<char> &data);
 Finish parse_finish(std::ifstream &file, std::vector<char> &data);
 

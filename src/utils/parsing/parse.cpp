@@ -31,6 +31,8 @@ vector<char> read_pov_file(ifstream &file) {
          actors.push_back(parse_plane(file, data));
       } else if (just_read_key(data, TRIANGLE_KEY)) {
          actors.push_back(parse_triangle(file, data));
+      } else if (just_read_key(data, AABOX_KEY)) {
+         actors.push_back(parse_aabox(file, data));
       }
    }
 
