@@ -1,5 +1,7 @@
 #include "aabox.hpp"
 
+#define EPSILON 0.001f
+
 using namespace glm;
 using namespace std;
 
@@ -14,32 +16,32 @@ vec3 AABox::get_normal(vec3 point) {
    point = point_to_obj_space(point);
 
    // on the top?
-   if (point.y == max.y)
+   if (almost_equals(point.y, max.y, EPSILON))
       return normal_to_world_space(vec3(0, 1, 0));
 
    // on the bottom?
-   if (point.y == min.y)
+   if (almost_equals(point.y, min.y, EPSILON))
       return normal_to_world_space(vec3(0, -1, 0));
 
    // on the left?
-   if (point.x == min.x)
+   if (almost_equals(point.x, min.x, EPSILON))
       return normal_to_world_space(vec3(-1, 0, 0));
 
    // on the right?
-   if (point.x == max.x)
+   if (almost_equals(point.x, max.x, EPSILON))
       return normal_to_world_space(vec3(1, 0, 0));
 
    // on the back?
-   if (point.z == min.z)
+   if (almost_equals(point.z, min.z, EPSILON))
       return normal_to_world_space(vec3(0, 0, -1));
 
    // on the front?
-   if (point.z == max.z)
+   if (almost_equals(point.z, max.z, EPSILON))
       return normal_to_world_space(vec3(0, 0, 1));
 
    // not on the box...
    // cerr << "AABox.get_normal: point not on box" << endl;
-   return vec3(0, 0, 0);
+   return vec3(1, 0, 0);
 }
 
 shared_ptr<Intersection> AABox::get_intersection(shared_ptr<Ray> ray) {
@@ -51,39 +53,33 @@ shared_ptr<Intersection> AABox::get_intersection(shared_ptr<Ray> ray) {
 
    // x
    if (obj_ray->dir.x == 0 &&
-         (obj_ray->source.x < min.x || obj_ray->source.x > max.x)) {
+         (obj_ray->source.x < min.x || obj_ray->source.x > max.x))
       return nullptr;
-   } else {
-      t1 = obj_ray->t_for_axis_plane(min.x, 0);
-      t2 = obj_ray->t_for_axis_plane(max.x, 0);
-      if (t1 > t2) swap(t1, t2);
-      if (t1 > tgmin) tgmin = t1;
-      if (t2 < tgmax) tgmax = t2;
-   }
+   t1 = obj_ray->t_for_axis_plane(min.x, 0);
+   t2 = obj_ray->t_for_axis_plane(max.x, 0);
+   if (t1 > t2) swap(t1, t2);
+   if (t1 > tgmin) tgmin = t1;
+   if (t2 < tgmax) tgmax = t2;
 
    // y
    if (obj_ray->dir.y == 0 &&
-         (obj_ray->source.y < min.y || obj_ray->source.y > max.y)) {
+         (obj_ray->source.y < min.y || obj_ray->source.y > max.y))
       return nullptr;
-   } else {
-      t1 = obj_ray->t_for_axis_plane(min.y, 1);
-      t2 = obj_ray->t_for_axis_plane(max.y, 1);
-      if (t1 > t2) swap(t1, t2);
-      if (t1 > tgmin) tgmin = t1;
-      if (t2 < tgmax) tgmax = t2;
-   }
+   t1 = obj_ray->t_for_axis_plane(min.y, 1);
+   t2 = obj_ray->t_for_axis_plane(max.y, 1);
+   if (t1 > t2) swap(t1, t2);
+   if (t1 > tgmin) tgmin = t1;
+   if (t2 < tgmax) tgmax = t2;
 
    // z
    if (obj_ray->dir.z == 0 &&
-         (obj_ray->source.z < min.z || obj_ray->source.z > max.z)) {
+         (obj_ray->source.z < min.z || obj_ray->source.z > max.z))
       return nullptr;
-   } else {
-      t1 = obj_ray->t_for_axis_plane(min.z, 2);
-      t2 = obj_ray->t_for_axis_plane(max.z, 2);
-      if (t1 > t2) swap(t1, t2);
-      if (t1 > tgmin) tgmin = t1;
-      if (t2 < tgmax) tgmax = t2;
-   }
+   t1 = obj_ray->t_for_axis_plane(min.z, 2);
+   t2 = obj_ray->t_for_axis_plane(max.z, 2);
+   if (t1 > t2) swap(t1, t2);
+   if (t1 > tgmin) tgmin = t1;
+   if (t2 < tgmax) tgmax = t2;
 
    // no Intersection
    if (tgmin > tgmax || tgmax < 0) return nullptr;
@@ -93,8 +89,9 @@ shared_ptr<Intersection> AABox::get_intersection(shared_ptr<Ray> ray) {
 }
 
 std::shared_ptr<AABox> AABox::get_bounding_box() {
-   shared_ptr<Geometry> result_geom = shared_from_this();
-   return static_pointer_cast<AABox>(result_geom);
+   shared_ptr<AABox> result = make_shared<AABox>(this->min, this->max);
+   result->transform_as_bounding_box(transform);
+   return result;
 }
 
 std::vector<glm::vec3> AABox::get_transformed_points(mat4 model) const {
@@ -158,7 +155,17 @@ void AABox::transform_as_bounding_box(glm::mat4 model) {
 }
 
 void AABox::print() const {
-   cout << "UNIMPLEMENTED AABOX PRINT" << endl;
+   cout << "- Type: AABox" << endl;
+   cout << "- Min: ";
+   print_vec3(this->min);
+   cout << endl;
+   cout << "- Max: ";
+   print_vec3(this->max);
+   cout << endl;
+   cout << "- Color: ";
+   print_vec3(this->pigment.color.to_vec3());
+   cout << ", Filter: " << this->pigment.filter << endl;
+   print_finish(this->finish);
 }
 
 void AABox::expand_to_include(shared_ptr<AABox> other) {

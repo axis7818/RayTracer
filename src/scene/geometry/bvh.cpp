@@ -77,5 +77,8 @@ string BVH::get_type() {
 }
 
 void BVH::print() const {
-   cout << "UNIMPLEMENTED BVH PRINT" << endl;
+   cout << "BVH Node" << endl;
+   for (shared_ptr<Geometry> shape : shapes) {
+      shape->print();
+   }
 }

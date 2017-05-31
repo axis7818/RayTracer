@@ -8,6 +8,7 @@
 #include <glm/vec4.hpp>
 #include <iostream>
 #include <limits>
+#include <utils/calc.hpp>
 #include <utils/printing.hpp>
 #include "geometry.hpp"
 
