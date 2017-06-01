@@ -41,7 +41,7 @@ vec3 AABox::get_normal(vec3 point) {
 
    // not on the box...
    // cerr << "AABox.get_normal: point not on box" << endl;
-   return vec3(1, 0, 0);
+   return normal_to_world_space(vec3(1, 0, 0));
 }
 
 shared_ptr<Intersection> AABox::get_intersection(shared_ptr<Ray> ray) {
@@ -85,7 +85,13 @@ shared_ptr<Intersection> AABox::get_intersection(shared_ptr<Ray> ray) {
    if (tgmin > tgmax || tgmax < 0) return nullptr;
 
    // if still here, its an Intersection at tgmin
-   return make_shared<Intersection>(ray, obj_ray, shared_from_this(), tgmin);
+
+   if (ray->t_valid(tgmin))
+      return make_shared<Intersection>(ray, obj_ray, shared_from_this(), tgmin);
+   else if (ray->t_valid(tgmax))
+      return make_shared<Intersection>(ray, obj_ray, shared_from_this(), tgmax);
+   else
+      return nullptr;
 }
 
 std::shared_ptr<AABox> AABox::get_bounding_box() {

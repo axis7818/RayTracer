@@ -69,7 +69,7 @@ bool in_shadow(shared_ptr<Scene> scene, shared_ptr<Light> light,
    shared_ptr<Intersection> shadow_intersection = scene->cast_ray(
     shadow_ray);
 
-   return shadow_intersection != NULL;
+   return shadow_intersection != nullptr;
 }
 
 RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
@@ -99,7 +99,9 @@ RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
    for (shared_ptr<Light> light : scene->lights) {
 
       // not for shadows!
-      if (USE_SHADOWS && in_shadow(scene, light, intersection)) continue;
+      if (USE_SHADOWS && in_shadow(scene, light, intersection)) {
+         continue;
+      }
 
       // important vectors
       vec3 L = normalize(light->position - intersection->intersection_point);

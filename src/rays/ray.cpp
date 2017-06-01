@@ -51,8 +51,9 @@ float Ray::t_for_axis_plane(float val, int plane) {
 
    }
 
-   if (d == 0.0f)
+   if (d == 0.0f) {
       return std::numeric_limits<float>::infinity();
+   }
 
    return (val - p) / d;
 }
