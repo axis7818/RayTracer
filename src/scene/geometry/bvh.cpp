@@ -65,6 +65,7 @@ shared_ptr<Intersection> BVH::get_intersection(shared_ptr<Ray> ray) {
 
       if (check != nullptr &&
             (intersection == nullptr || check->t < intersection->t)) {
+         // cout << "T: " << check->t << " Shape: " << check->target->get_type() << endl;
          intersection = check;
       }
    }
