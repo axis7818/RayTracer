@@ -23,10 +23,10 @@ using namespace std;
 int prepare_execute(const char *mode, int argc, char **argv);
 int execute(const char *mode, const Scene &scene, const int width,
  const int height, const int x, const int y, const bool use_alt_brdf,
- const int ss, const bool fresnel, const bool use_bvh);
+ const int ss, const bool fresnel, const bool use_bvh, const bool use_gi);
 
 int render(const Scene &scene, const bool use_alt_brdf, const int ss,
- const bool fresnel);
+ const bool fresnel, const bool gi);
 int pixelray(const Scene &scene, const int x, const int y);
 int firsthit(const Scene &scene, const int x, const int y);
 int pixelcolor(const Scene &scene, const int x, const int y,
@@ -118,6 +118,13 @@ bool using_bvh(int argc, char **argv) {
    return false;
 }
 
+bool using_gi(int argc, char **argv) {
+   for (size_t i = 0; i < argc; ++i)
+      if (!strcmp(GI_FLAG, argv[i]))
+         return true;
+   return false;
+}
+
 // mode should be known, and the following arguments should be:
 //    INPUT_FILE WIDTH HEIGHT X Y
 int prepare_execute(const char *mode, int argc, char **argv) {
@@ -130,6 +137,7 @@ int prepare_execute(const char *mode, int argc, char **argv) {
    int ss = get_ss(argc, argv);
    bool fresnel = use_fresnel(argc, argv);
    bool use_bvh = using_bvh(argc, argv);
+   bool use_gi = using_gi(argc, argv);
 
    if (SHOW_CMD_ARGS) {
       cout << "width: " << width << endl;
@@ -155,12 +163,12 @@ int prepare_execute(const char *mode, int argc, char **argv) {
    }
 
    return execute(mode, *scene, width, height, x, y, use_alt_brdf, ss,
-    fresnel, use_bvh);
+    fresnel, use_bvh, use_gi);
 }
 
 int execute(const char *mode, const Scene &scene, const int width,
  const int height, const int x, const int y, const bool use_alt_brdf,
- const int ss, const bool fresnel, const bool use_bvh) {
+ const int ss, const bool fresnel, const bool use_bvh, const bool use_gi) {
    if (!strcmp(mode, MODE_SCENEINFO)) {
       scene.print();
       return 0;
@@ -182,7 +190,7 @@ int execute(const char *mode, const Scene &scene, const int width,
    scene.camera->height = height;
 
    if (!strcmp(mode, MODE_RENDER)) {
-      return render(scene, use_alt_brdf, ss, fresnel);
+      return render(scene, use_alt_brdf, ss, fresnel, use_gi);
    } else if (!strcmp(mode, MODE_FIRSTHIT) || !strcmp(mode, MODE_PIXELRAY)
     || !strcmp(mode, MODE_PIXELCOLOR) || !strcmp(mode, MODE_PIXELTRACE)) {
 
@@ -216,7 +224,7 @@ int execute(const char *mode, const Scene &scene, const int width,
 }
 
 int render(const Scene &scene, const bool use_alt_brdf, const int ss,
- const bool fresnel) {
+ const bool fresnel, const bool gi) {
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
 
    unsigned char *data = new unsigned char[scene.camera->width *
@@ -237,7 +245,7 @@ int render(const Scene &scene, const bool use_alt_brdf, const int ss,
 
                pixel_color = pixel_color +
                 ray_lighting(make_shared<Scene>(scene), ray,
-                lighting_mode, fresnel, false)->color;
+                lighting_mode, fresnel, gi, false)->color;
             }
          }
 
@@ -319,7 +327,7 @@ int pixelcolor(const Scene &scene, const int x, const int y,
 
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
    RGBColor color = ray_lighting(make_shared<Scene>(scene), ray->source,
-    intersection->intersection_point, lighting_mode, fresnel, true)->color;
+    intersection->intersection_point, lighting_mode, fresnel, false, true)->color;
 
    cout << "Pixel: [" << x << ", " << y << "] Ray: ";
    print_vec3(ray->source);
@@ -360,7 +368,7 @@ int pixeltrace(const Scene &scene, const int x, const int y,
    shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
    shared_ptr<Path> path = ray_lighting(make_shared<Scene>(scene), ray,
-    lighting_mode, fresnel, true);
+    lighting_mode, fresnel, false, true);
    path->log.insert(path->log.begin(), "  Iteration type: Primary");
 
    cout << "Pixel: [" << x << ", " << y << "] Color: ("

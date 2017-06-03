@@ -16,6 +16,7 @@
 #define SS_COUNT_FLAG "-ss="
 #define FRESNEL_FLAG "-fresnel"
 #define SDS_FLAG "-sds"
+#define GI_FLAG "-gi"
 
 static const unsigned int mode_count = 5;
 static const char *mode_names[] = {

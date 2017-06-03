@@ -73,8 +73,9 @@ bool in_shadow(shared_ptr<Scene> scene, shared_ptr<Light> light,
 }
 
 RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
- shared_ptr<Intersection> intersection, LightingMode lighting_mode,
- vec3 &ambient, vec3 &diffuse, vec3 &specular) {
+ shared_ptr<Intersection> intersection, int gi_count,
+ LightingMode lighting_mode, vec3 &ambient, vec3 &diffuse, vec3 &specular) {
+
    // alias some common properties to save typing
    float k_a = intersection->target->finish.ambient;
    float k_d = intersection->target->finish.diffuse;
@@ -178,7 +179,7 @@ vec3 beers_law(vec3 color, float distance) {
 
 shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
  shared_ptr<Ray> ray, LightingMode lighting_mode, int recursion_level,
- const bool use_fresnel, bool keep_log) {
+ const bool use_fresnel, const bool use_gi, bool keep_log) {
    shared_ptr<Path> result = make_shared<Path>();
    if (keep_log) result->log.push_back(ray_string(ray));
 
@@ -203,8 +204,15 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
 
    // start with the local shading
    vec3 loc_a, loc_d, loc_s;
+   int gi_count = 0;
+   if (use_gi) {
+      if (recursion_level == MAX_LIGHT_BOUNCES)
+         gi_count = GI_COUNT_FIRST_BOUNCE;
+      else if (recursion_level == MAX_LIGHT_BOUNCES - 1)
+         gi_count = GI_COUNT_SECOND_BOUNCE;
+   }
    RGBColor local_color = local_shading(scene, ray, intersection,
-    lighting_mode, loc_a, loc_d, loc_s);
+    gi_count, lighting_mode, loc_a, loc_d, loc_s);
 
    // calculate the filter values
    float filter = intersection->target->pigment.filter;
@@ -222,7 +230,7 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
    if (reflection_contrib > 0) {
       shared_ptr<Ray> reflected_ray = get_reflected_ray(intersection);
       reflected = recursive_ray_lighting(scene, reflected_ray,
-       lighting_mode, recursion_level - 1, use_fresnel, keep_log);
+       lighting_mode, recursion_level - 1, use_fresnel, use_gi, keep_log);
       if (keep_log) reflected->log.insert(reflected->log.begin(),
        "  Iteration type: Reflection");
       result->reflected = reflected;
@@ -235,7 +243,7 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
       shared_ptr<Ray> transmitted_ray = get_transmitted_ray(intersection,
        entering);
       refracted = recursive_ray_lighting(scene, transmitted_ray,
-       lighting_mode, recursion_level - 1, use_fresnel, keep_log);
+       lighting_mode, recursion_level - 1, use_fresnel, use_gi, keep_log);
       if (keep_log) refracted->log.insert(refracted->log.begin(),
        "  Iteration type: Refraction");
 
@@ -269,13 +277,15 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
 }
 
 shared_ptr<Path> ray_lighting(shared_ptr<Scene> scene, vec3 source,
- vec3 destination, LightingMode lighting_mode, const bool use_fresnel, bool keep_log) {
+ vec3 destination, LightingMode lighting_mode, const bool use_fresnel,
+ const bool use_gi, bool keep_log) {
    shared_ptr<Ray> ray = make_shared<Ray>(source, destination - source, 0, -1);
-   return ray_lighting(scene, ray, lighting_mode, use_fresnel, keep_log);
+   return ray_lighting(scene, ray, lighting_mode, use_fresnel, use_gi, keep_log);
 }
 
 shared_ptr<Path> ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
- LightingMode lighting_mode, const bool use_fresnel, bool keep_log) {
+ LightingMode lighting_mode, const bool use_fresnel, const bool use_gi,
+ bool keep_log) {
    return recursive_ray_lighting(scene, ray, lighting_mode,
-    MAX_LIGHT_BOUNCES, use_fresnel, keep_log);
+    MAX_LIGHT_BOUNCES, use_fresnel, use_gi, keep_log);
 }
