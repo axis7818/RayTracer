@@ -72,6 +72,10 @@ bool in_shadow(shared_ptr<Scene> scene, shared_ptr<Light> light,
    return shadow_intersection != nullptr;
 }
 
+RGBColor monte_carlo_gi(const int count) {
+
+}
+
 RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
  shared_ptr<Intersection> intersection, int gi_count,
  LightingMode lighting_mode, vec3 &ambient, vec3 &diffuse, vec3 &specular) {
@@ -88,7 +92,11 @@ RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
    vec3 obj_color = intersection->target->pigment.color.to_vec3();
 
    // 3 lighting components
-   ambient = k_a * obj_color;
+   if (gi_count <= 0) {
+      ambient = k_a * obj_color;
+   } else {
+      ambient = monte_carlo_gi(gi_count).to_vec3();
+   }
    diffuse = vec3(0, 0, 0);
    specular = vec3(0, 0, 0);
 
