@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <lighting/renderer.hpp>
 #include <rays/intersection.hpp>
@@ -31,6 +32,8 @@ int pixelcolor(const Scene &scene, const int x, const int y);
 int pixeltrace(const Scene &scene, const int x, const int y);
 
 int main(int argc, char **argv) {
+   srand(time(NULL));
+
    if (SHOW_HEADER) {
       cout << "---- " << PROGRAM_NAME << " ----" << endl;
       cout << "Cameron Taylor" << endl << "CPE 473 Spring 2017" << endl << endl;
@@ -225,7 +228,8 @@ int render(const Scene &scene) {
    unsigned char *data = new unsigned char[scene.camera->width *
     scene.camera->height * 3];
 
-   // int total_pixels = scene.camera->width * scene.camera->height;
+   int total_pixels = scene.camera->width * scene.camera->height;
+   bool first = true;
 
    // cast the rays
    for (int x = 0; x < scene.camera->width; ++x) {
@@ -255,8 +259,11 @@ int render(const Scene &scene) {
          data[index + 1] = g;
          data[index + 2] = b;
 
-         // int pixel_num = x * scene.camera->height + y + 1;
-         // cout << "Pixel " << pixel_num << " of " << total_pixels << endl;
+         int pixel_num = x * scene.camera->height + y + 1;
+         // cout << "pixel: " << pixel_num << endl;
+         print_progress(1.0 * pixel_num / total_pixels, first);
+         first = false;
+
       }
    }
 

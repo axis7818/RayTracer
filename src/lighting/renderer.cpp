@@ -83,8 +83,35 @@ vec3 beers_law(vec3 color, float distance) {
    return result;
 }
 
-RGBColor monte_carlo_gi(const int count) {
+vec3 Renderer::monte_carlo_gi(shared_ptr<Intersection> intersection,
+      const int count, const int recursion_level) {
 
+   vec3 up = vec3(0, 0, 1);
+   vec3 normal = intersection->normal;
+   float angle = acos(dot(up, normal));
+   vec3 axis = cross(up, normal);
+
+   mat4 rot_matrix = glm::rotate(mat4(1.0f), glm::radians(angle), axis);
+
+   vec3 ambient = vec3(0, 0, 0);
+
+   for (size_t i = 0; i < count; ++i) {
+      vec4 random_point = vec4(generate_cos_weighted_point(), 1.0);
+      vec3 cast_point = vec3(rot_matrix * random_point);
+
+      vec3 cast_dir = cast_point - intersection->intersection_point;
+      vec3 start_point = intersection->intersection_point + 0.001f * cast_dir;
+      shared_ptr<Ray> cast_ray = make_shared<Ray>(start_point,
+         cast_point, 0, -1);
+
+      vec3 color =
+         recursive_render_ray(cast_ray, recursion_level - 1)->color.to_vec3();
+
+      float weight = dot(cast_point, normal);
+      ambient += weight * color;
+   }
+
+   return ambient;
 }
 
 /* END HELPER LIGHTING FUNCTIONS */
@@ -94,7 +121,7 @@ bool Renderer::in_shadow(shared_ptr<Intersection> intersection,
    vec3 L = light->position - intersection->intersection_point;
 
    float shadow_ray_len = length(light->position -
-    intersection->intersection_point);
+      intersection->intersection_point);
 
    shared_ptr<Ray> shadow_ray = make_shared<Ray>(
     intersection->intersection_point, L, 0.001f, shadow_ray_len);
@@ -105,7 +132,8 @@ bool Renderer::in_shadow(shared_ptr<Intersection> intersection,
 }
 
 RGBColor Renderer::local_shading(shared_ptr<Intersection> intersection,
-      int gi_count, vec3 &ambient, vec3 &diffuse, vec3 &specular) {
+      int gi_count, vec3 &ambient, vec3 &diffuse, vec3 &specular,
+      const int recursion_level) {
 
    // alias some common properties to save typing
    float k_a = intersection->target->finish.ambient;
@@ -119,16 +147,16 @@ RGBColor Renderer::local_shading(shared_ptr<Intersection> intersection,
    vec3 obj_color = intersection->target->pigment.color.to_vec3();
 
    // 3 lighting components
-   if (gi_count <= 0) {
-      ambient = k_a * obj_color;
-   } else {
-      ambient = monte_carlo_gi(gi_count).to_vec3();
+   ambient = k_a * obj_color;
+   if (gi_count > 0) {
+      ambient = monte_carlo_gi(intersection, gi_count, recursion_level);
    }
    diffuse = vec3(0, 0, 0);
    specular = vec3(0, 0, 0);
 
    // important vectors
-   vec3 V = normalize(intersection->ray->source - intersection->intersection_point);
+   vec3 V = normalize(intersection->ray->source -
+      intersection->intersection_point);
    vec3 N = intersection->normal;
 
    // determine the diffuse/specular from each light source
@@ -179,11 +207,13 @@ shared_ptr<Path> Renderer::render_ray(vec3 source, vec3 destination) {
 
 shared_ptr<Path> Renderer::recursive_render_ray(shared_ptr<Ray> ray,
       int recursion_level) {
+
    shared_ptr<Path> result = make_shared<Path>();
    if (keep_log) result->log.push_back(ray_string(ray));
 
    if (recursion_level <= 0) {
-      if (keep_log) result->log.push_back(string("Ignoring. Recursion too deep."));
+      if (keep_log)
+         result->log.push_back(string("Ignoring. Recursion too deep."));
       return result;
    }
 
@@ -205,13 +235,11 @@ shared_ptr<Path> Renderer::recursive_render_ray(shared_ptr<Ray> ray,
    vec3 loc_a, loc_d, loc_s;
    int gi_count = 0;
    if (scene->use_gi) {
-      if (recursion_level == MAX_LIGHT_BOUNCES)
-         gi_count = GI_COUNT_FIRST_BOUNCE;
-      else if (recursion_level == MAX_LIGHT_BOUNCES - 1)
-         gi_count = GI_COUNT_SECOND_BOUNCE;
+      gi_count = (int)(GI_COUNT_FIRST_BOUNCE
+         / pow(4, (MAX_LIGHT_BOUNCES - recursion_level)));
    }
    RGBColor local_color = local_shading(intersection, gi_count, loc_a, loc_d,
-      loc_s);
+      loc_s, recursion_level);
 
    // calculate the filter values
    float filter = intersection->target->pigment.filter;
@@ -262,9 +290,12 @@ shared_ptr<Path> Renderer::recursive_render_ray(shared_ptr<Ray> ray,
    if (keep_log) {
       result->log.push_back(named_vec3_string(string("     Final Color"),
        color.to_vec3()));
-      result->log.push_back(named_vec3_string(string("         Ambient"), loc_a));
-      result->log.push_back(named_vec3_string(string("         Diffuse"), loc_d));
-      result->log.push_back(named_vec3_string(string("        Specular"), loc_s));
+      result->log.push_back(named_vec3_string(string("         Ambient"),
+         loc_a));
+      result->log.push_back(named_vec3_string(string("         Diffuse"),
+         loc_d));
+      result->log.push_back(named_vec3_string(string("        Specular"),
+         loc_s));
       result->log.push_back(named_vec3_string(string("      Reflection"),
        reflected->color.to_vec3()));
       result->log.push_back(named_vec3_string(string("      Refraction"),

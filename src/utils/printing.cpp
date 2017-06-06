@@ -59,3 +59,21 @@ void print_mat4(const mat4 &m) {
       cout << endl;
    }
 }
+
+void print_progress(float progress, bool first) {
+   if (!first) {
+      cout << "\x1b[1A" << "\x1b[2K";
+   }
+
+   int done = round(100 * progress);
+   int not_done = 100 - done;
+
+   cout << "[";
+   for (int i = 0; i < done; ++i) {
+      cout << "#";
+   }
+   for (int i = 0; i < not_done; ++i) {
+      cout << "-";
+   }
+   cout << "]" << endl;
+}

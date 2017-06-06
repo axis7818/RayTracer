@@ -17,4 +17,6 @@ void print_finish(Finish finish);
 void print_path(std::shared_ptr<Path> path);
 void print_mat4(const glm::mat4 &m);
 
+void print_progress(float progress, bool first);
+
 #endif /* end of include guard: _PRINTING_HPP */
