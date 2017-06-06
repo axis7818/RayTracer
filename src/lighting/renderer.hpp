@@ -28,16 +28,13 @@ enum LightingMode { BLINN_PHONG, COOK_TORRANCE };
 
 class Renderer {
 public:
-   Renderer(std::shared_ptr<Scene> scene, LightingMode lighting_mode,
-      bool use_fresnel, bool use_gi, bool keep_log);
+   Renderer(std::shared_ptr<Scene> scene, bool keep_log);
 
    std::shared_ptr<Path> render_ray(std::shared_ptr<Ray> ray);
    std::shared_ptr<Path> render_ray(glm::vec3 source, glm::vec3 destination);
 
    std::shared_ptr<Scene> scene;
    LightingMode lighting_mode;
-   bool use_fresnel;
-   bool use_gi;
    bool keep_log;
 
 private:

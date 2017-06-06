@@ -21,7 +21,7 @@ shared_ptr<Intersection> Scene::cast_ray(shared_ptr<Ray> ray) const {
    return closest;
 }
 
-void Scene::build_shapes_from_actors(const bool use_bvh) {
+void Scene::build_shapes_from_actors() {
 
    vector<shared_ptr<Geometry>> bvh_shapes;
 

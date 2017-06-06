@@ -22,17 +22,13 @@ using namespace std;
 
 int prepare_execute(const char *mode, int argc, char **argv);
 int execute(const char *mode, const Scene &scene, const int width,
- const int height, const int x, const int y, const bool use_alt_brdf,
- const int ss, const bool fresnel, const bool use_bvh, const bool use_gi);
+ const int height, const int x, const int y);
 
-int render(const Scene &scene, const bool use_alt_brdf, const int ss,
- const bool fresnel, const bool gi);
+int render(const Scene &scene);
 int pixelray(const Scene &scene, const int x, const int y);
 int firsthit(const Scene &scene, const int x, const int y);
-int pixelcolor(const Scene &scene, const int x, const int y,
- const bool use_alt_brdf, const bool fresnel);
-int pixeltrace(const Scene &scene, const int x, const int y,
- const bool use_alt_brdf, const bool fresnel);
+int pixelcolor(const Scene &scene, const int x, const int y);
+int pixeltrace(const Scene &scene, const int x, const int y);
 
 int main(int argc, char **argv) {
    if (SHOW_HEADER) {
@@ -133,18 +129,12 @@ int prepare_execute(const char *mode, int argc, char **argv) {
    get_positive_number(argc, argv, 2, height, false);
    get_positive_number(argc, argv, 3, x, true);
    get_positive_number(argc, argv, 4, y, true);
-   bool use_alt_brdf = using_alt_brdf(argc, argv);
-   int ss = get_ss(argc, argv);
-   bool fresnel = use_fresnel(argc, argv);
-   bool use_bvh = using_bvh(argc, argv);
-   bool use_gi = using_gi(argc, argv);
 
    if (SHOW_CMD_ARGS) {
       cout << "width: " << width << endl;
       cout << "height: " << height << endl;
       cout << "x: " << x << endl;
       cout << "y: " << y << endl;
-      cout << "altbrdf: " << (use_alt_brdf ? "true" : "false") << endl;
    }
 
    // parse the scene
@@ -152,7 +142,15 @@ int prepare_execute(const char *mode, int argc, char **argv) {
    if (argc > 0) {
       try {
          scene = parse_scene(argv[0]);
-         scene->build_shapes_from_actors(use_bvh);
+
+         // get config
+         scene->use_alt_brdf = using_alt_brdf(argc, argv);
+         scene->ss = get_ss(argc, argv);
+         scene->use_fresnel = use_fresnel(argc, argv);
+         scene->use_bvh = using_bvh(argc, argv);
+         scene->use_gi = using_gi(argc, argv);
+
+         scene->build_shapes_from_actors();
       } catch (ParsingException &pe) {
          cerr << pe.what() << endl;
          exit(1);
@@ -162,13 +160,11 @@ int prepare_execute(const char *mode, int argc, char **argv) {
       exit(1);
    }
 
-   return execute(mode, *scene, width, height, x, y, use_alt_brdf, ss,
-    fresnel, use_bvh, use_gi);
+   return execute(mode, *scene, width, height, x, y);
 }
 
 int execute(const char *mode, const Scene &scene, const int width,
- const int height, const int x, const int y, const bool use_alt_brdf,
- const int ss, const bool fresnel, const bool use_bvh, const bool use_gi) {
+ const int height, const int x, const int y) {
    if (!strcmp(mode, MODE_SCENEINFO)) {
       scene.print();
       return 0;
@@ -190,7 +186,7 @@ int execute(const char *mode, const Scene &scene, const int width,
    scene.camera->height = height;
 
    if (!strcmp(mode, MODE_RENDER)) {
-      return render(scene, use_alt_brdf, ss, fresnel, use_gi);
+      return render(scene);
    } else if (!strcmp(mode, MODE_FIRSTHIT) || !strcmp(mode, MODE_PIXELRAY)
     || !strcmp(mode, MODE_PIXELCOLOR) || !strcmp(mode, MODE_PIXELTRACE)) {
 
@@ -212,9 +208,9 @@ int execute(const char *mode, const Scene &scene, const int width,
       } else if (!strcmp(mode, MODE_PIXELRAY)) {
          return pixelray(scene, x, y);
       } else if (!strcmp(mode, MODE_PIXELCOLOR)) {
-         return pixelcolor(scene, x, y, use_alt_brdf, fresnel);
+         return pixelcolor(scene, x, y);
       } else if (!strcmp(mode, MODE_PIXELTRACE)) {
-         return pixeltrace(scene, x, y, use_alt_brdf, fresnel);
+         return pixeltrace(scene, x, y);
       }
 
    } else {
@@ -223,11 +219,8 @@ int execute(const char *mode, const Scene &scene, const int width,
    return 1;
 }
 
-int render(const Scene &scene, const bool use_alt_brdf, const int ss,
- const bool fresnel, const bool gi) {
-   LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
-   Renderer renderer(make_shared<Scene>(scene), lighting_mode, fresnel, gi,
-      false);
+int render(const Scene &scene) {
+   Renderer renderer(make_shared<Scene>(scene), false);
 
    unsigned char *data = new unsigned char[scene.camera->width *
     scene.camera->height * 3];
@@ -241,15 +234,16 @@ int render(const Scene &scene, const bool use_alt_brdf, const int ss,
          RGBColor pixel_color = RGBColor(0.0f, 0.0f, 0.0f);
 
          // super sampling
-         for (int m = 0; m < ss; ++m) {
-            for (int n = 0; n < ss; ++n) {
-               shared_ptr<Ray> ray = scene.camera->make_ray(x, y, m, n, ss);
+         for (int m = 0; m < scene.ss; ++m) {
+            for (int n = 0; n < scene.ss; ++n) {
+               shared_ptr<Ray> ray =
+                  scene.camera->make_ray(x, y, m, n, scene.ss);
 
                pixel_color = pixel_color + renderer.render_ray(ray)->color;
             }
          }
 
-         pixel_color /= ss * ss;
+         pixel_color /= scene.ss * scene.ss;
          unsigned int r = (unsigned int)round(pixel_color.r * 255.0f);
          unsigned int g = (unsigned int)round(pixel_color.g * 255.0f);
          unsigned int b = (unsigned int)round(pixel_color.b * 255.0f);
@@ -320,14 +314,11 @@ int pixelray(const Scene &scene, const int x, const int y) {
    return 0;
 }
 
-int pixelcolor(const Scene &scene, const int x, const int y,
- const bool use_alt_brdf, const bool fresnel) {
+int pixelcolor(const Scene &scene, const int x, const int y) {
    shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
    shared_ptr<Intersection> intersection = scene.cast_ray(ray);
 
-   LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
-   Renderer renderer(make_shared<Scene>(scene), lighting_mode, fresnel, false,
-      true);
+   Renderer renderer(make_shared<Scene>(scene), true);
 
    RGBColor color = renderer.render_ray(ray->source,
       intersection->intersection_point)->color;
@@ -354,7 +345,8 @@ int pixelcolor(const Scene &scene, const int x, const int y,
       is_geometry = true;
    }
 
-   cout << "BRDF: " << (use_alt_brdf ? "Alternate" : "Blinn-Phong") << endl;
+   cout << "BRDF: " << (scene.use_alt_brdf ? "Alternate" : "Blinn-Phong")
+      << endl;
    if (is_geometry) {
       unsigned int r = (unsigned int)round(color.r * 255.f);
       unsigned int g = (unsigned int)round(color.g * 255.f);
@@ -366,14 +358,12 @@ int pixelcolor(const Scene &scene, const int x, const int y,
    return 0;
 }
 
-int pixeltrace(const Scene &scene, const int x, const int y,
- const bool use_alt_brdf, const bool fresnel) {
+int pixeltrace(const Scene &scene, const int x, const int y) {
    shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
-   LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
-   Renderer renderer(make_shared<Scene>(scene), lighting_mode, fresnel, false, true);
+   Renderer renderer(make_shared<Scene>(scene), true);
 
    shared_ptr<Path> path = renderer.render_ray(ray);
-   
+
    path->log.insert(path->log.begin(), "  Iteration type: Primary");
 
    cout << "Pixel: [" << x << ", " << y << "] Color: ("

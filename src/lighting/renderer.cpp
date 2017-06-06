@@ -3,11 +3,10 @@
 using namespace glm;
 using namespace std;
 
-Renderer::Renderer(shared_ptr<Scene> scene, LightingMode lighting_mode,
-   bool use_fresnel, bool use_gi, bool keep_log) :
-   scene(scene), lighting_mode(lighting_mode), use_fresnel(use_fresnel),
-   use_gi(use_gi), keep_log(keep_log)
+Renderer::Renderer(shared_ptr<Scene> scene, bool keep_log) :
+   scene(scene), keep_log(keep_log)
 {
+   lighting_mode = scene->use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
 }
 
 /* HELPER FUNCTIONS FOR THE LIGHTING EQUATIONS */
@@ -205,7 +204,7 @@ shared_ptr<Path> Renderer::recursive_render_ray(shared_ptr<Ray> ray,
    // start with the local shading
    vec3 loc_a, loc_d, loc_s;
    int gi_count = 0;
-   if (use_gi) {
+   if (scene->use_gi) {
       if (recursion_level == MAX_LIGHT_BOUNCES)
          gi_count = GI_COUNT_FIRST_BOUNCE;
       else if (recursion_level == MAX_LIGHT_BOUNCES - 1)
@@ -217,7 +216,7 @@ shared_ptr<Path> Renderer::recursive_render_ray(shared_ptr<Ray> ray,
    // calculate the filter values
    float filter = intersection->target->pigment.filter;
    float reflection = intersection->target->finish.reflection;
-   float fresnel_reflectance = use_fresnel ?
+   float fresnel_reflectance = scene->use_fresnel ?
     schlicks_approximation(intersection) : 0.0f;
 
    float local_contrib = (1.0f - filter) * (1.0f - reflection);

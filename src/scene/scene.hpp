@@ -23,13 +23,20 @@ public:
 
    void print() const;
    std::shared_ptr<Intersection> cast_ray(std::shared_ptr<Ray> ray) const;
-   void build_shapes_from_actors(const bool use_bvh);
+   void build_shapes_from_actors();
 
    std::string filename;
    std::shared_ptr<Camera> camera;
    std::vector<std::shared_ptr<Light>> lights;
    std::vector<std::shared_ptr<Actor>> actors;
    std::vector<std::shared_ptr<Geometry>> shapes;
+
+   // config
+   bool use_alt_brdf;
+   int ss;
+   bool use_fresnel;
+   bool use_bvh;
+   bool use_gi;
 
 };
 
