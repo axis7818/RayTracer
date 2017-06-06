@@ -1,8 +1,16 @@
-#include "lighting.hpp"
-#include <utils/color.hpp>
+#include "renderer.hpp"
 
 using namespace glm;
 using namespace std;
+
+Renderer::Renderer(shared_ptr<Scene> scene, LightingMode lighting_mode,
+   bool use_fresnel, bool use_gi, bool keep_log) :
+   scene(scene), lighting_mode(lighting_mode), use_fresnel(use_fresnel),
+   use_gi(use_gi), keep_log(keep_log)
+{
+}
+
+/* HELPER FUNCTIONS FOR THE LIGHTING EQUATIONS */
 
 float normalized_distribution(float h_dot_n, float roughness) {
    float alpha = roughness * roughness;
@@ -57,8 +65,33 @@ vec3 ct_specular_for_light(float s, float roughness, float ior, vec3 N, vec3 V,
    return s * r_s * lc * obj_color;
 }
 
-bool in_shadow(shared_ptr<Scene> scene, shared_ptr<Light> light,
- shared_ptr<Intersection> intersection) {
+float schlicks_approximation(shared_ptr<Intersection> intersection) {
+   float ior = intersection->target->finish.ior;
+   vec3 n = intersection->normal;
+   vec3 v = normalize(intersection->ray->source -
+    intersection->intersection_point);
+
+   float F_0 = pow((ior - 1.f) / (ior + 1.f), 2);
+   float dot_prod = dot(n, v);
+   if (dot_prod < 0) dot_prod *= -1;
+   float result = F_0 + (1.0f - F_0) * pow(1.0f - dot_prod, 5);
+   return result;
+}
+
+vec3 beers_law(vec3 color, float distance) {
+   vec3 absorbance = 0.15f * -distance * (1.f - color);
+   vec3 result = exp(absorbance);
+   return result;
+}
+
+RGBColor monte_carlo_gi(const int count) {
+
+}
+
+/* END HELPER LIGHTING FUNCTIONS */
+
+bool Renderer::in_shadow(shared_ptr<Intersection> intersection,
+      shared_ptr<Light> light) {
    vec3 L = light->position - intersection->intersection_point;
 
    float shadow_ray_len = length(light->position -
@@ -72,13 +105,8 @@ bool in_shadow(shared_ptr<Scene> scene, shared_ptr<Light> light,
    return shadow_intersection != nullptr;
 }
 
-RGBColor monte_carlo_gi(const int count) {
-
-}
-
-RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
- shared_ptr<Intersection> intersection, int gi_count,
- LightingMode lighting_mode, vec3 &ambient, vec3 &diffuse, vec3 &specular) {
+RGBColor Renderer::local_shading(shared_ptr<Intersection> intersection,
+      int gi_count, vec3 &ambient, vec3 &diffuse, vec3 &specular) {
 
    // alias some common properties to save typing
    float k_a = intersection->target->finish.ambient;
@@ -101,14 +129,14 @@ RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
    specular = vec3(0, 0, 0);
 
    // important vectors
-   vec3 V = normalize(ray->source - intersection->intersection_point);
+   vec3 V = normalize(intersection->ray->source - intersection->intersection_point);
    vec3 N = intersection->normal;
 
    // determine the diffuse/specular from each light source
    for (shared_ptr<Light> light : scene->lights) {
 
       // not for shadows!
-      if (USE_SHADOWS && in_shadow(scene, light, intersection)) {
+      if (USE_SHADOWS && in_shadow(intersection, light)) {
          continue;
       }
 
@@ -137,57 +165,21 @@ RGBColor local_shading(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
 
    // combine the color components
    return RGBColor(ambient + diffuse + specular);
+
 }
 
-shared_ptr<Ray> get_reflected_ray(shared_ptr<Intersection> intersection) {
-   vec3 N = intersection->normal;
-   vec3 r = intersection->ray->dir - 2 * (dot(intersection->ray->dir, N)) * N;
-   return make_shared<Ray>(intersection->intersection_point, r, 0.001f, 0);
+shared_ptr<Path> Renderer::render_ray(shared_ptr<Ray> ray) {
+   return recursive_render_ray(ray, MAX_LIGHT_BOUNCES);
 }
 
-shared_ptr<Ray> get_transmitted_ray(shared_ptr<Intersection> intersection,
- bool &entering) {
-   // some important values for the calculation
-   vec3 d = intersection->ray->dir;
-   vec3 N = intersection->normal;
-   float ior_ratio = 1.0f / intersection->target->finish.ior;
-   if (dot(d, N) > 0) { // this means we are leaving the object
-      entering = false;
-      ior_ratio = intersection->target->finish.ior;
-      N = -N;
-   } else {
-      entering = true;
-   }
-
-   float root = sqrt(1.0f - pow(ior_ratio, 2) * (1.0f - pow(dot(d, N), 2)));
-   vec3 first_term = ior_ratio * (d - dot(d, N) * N);
-   vec3 t = first_term - N * root;
-
-   return make_shared<Ray>(intersection->intersection_point, t, 0.001f, 0);
+shared_ptr<Path> Renderer::render_ray(vec3 source, vec3 destination) {
+   shared_ptr<Ray> ray = make_shared<Ray>(source, destination - source,
+      0, -1);
+   return recursive_render_ray(ray, MAX_LIGHT_BOUNCES);
 }
 
-float schlicks_approximation(shared_ptr<Intersection> intersection) {
-   float ior = intersection->target->finish.ior;
-   vec3 n = intersection->normal;
-   vec3 v = normalize(intersection->ray->source -
-    intersection->intersection_point);
-
-   float F_0 = pow((ior - 1.f) / (ior + 1.f), 2);
-   float dot_prod = dot(n, v);
-   if (dot_prod < 0) dot_prod *= -1;
-   float result = F_0 + (1.0f - F_0) * pow(1.0f - dot_prod, 5);
-   return result;
-}
-
-vec3 beers_law(vec3 color, float distance) {
-   vec3 absorbance = 0.15f * -distance * (1.f - color);
-   vec3 result = exp(absorbance);
-   return result;
-}
-
-shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
- shared_ptr<Ray> ray, LightingMode lighting_mode, int recursion_level,
- const bool use_fresnel, const bool use_gi, bool keep_log) {
+shared_ptr<Path> Renderer::recursive_render_ray(shared_ptr<Ray> ray,
+      int recursion_level) {
    shared_ptr<Path> result = make_shared<Path>();
    if (keep_log) result->log.push_back(ray_string(ray));
 
@@ -219,8 +211,8 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
       else if (recursion_level == MAX_LIGHT_BOUNCES - 1)
          gi_count = GI_COUNT_SECOND_BOUNCE;
    }
-   RGBColor local_color = local_shading(scene, ray, intersection,
-    gi_count, lighting_mode, loc_a, loc_d, loc_s);
+   RGBColor local_color = local_shading(intersection, gi_count, loc_a, loc_d,
+      loc_s);
 
    // calculate the filter values
    float filter = intersection->target->pigment.filter;
@@ -236,9 +228,9 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
    // reflected light
    shared_ptr<Path> reflected = make_shared<Path>();
    if (reflection_contrib > 0) {
-      shared_ptr<Ray> reflected_ray = get_reflected_ray(intersection);
-      reflected = recursive_ray_lighting(scene, reflected_ray,
-       lighting_mode, recursion_level - 1, use_fresnel, use_gi, keep_log);
+      shared_ptr<Ray> reflected_ray = intersection->get_reflected_ray();
+      reflected = recursive_render_ray(reflected_ray, recursion_level - 1);
+
       if (keep_log) reflected->log.insert(reflected->log.begin(),
        "  Iteration type: Reflection");
       result->reflected = reflected;
@@ -248,10 +240,10 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
    shared_ptr<Path> refracted = make_shared<Path>();
    if (transmission_contrib > 0) {
       bool entering = true;
-      shared_ptr<Ray> transmitted_ray = get_transmitted_ray(intersection,
-       entering);
-      refracted = recursive_ray_lighting(scene, transmitted_ray,
-       lighting_mode, recursion_level - 1, use_fresnel, use_gi, keep_log);
+      shared_ptr<Ray> transmitted_ray =
+         intersection->get_transmitted_ray(entering);
+      refracted = recursive_render_ray(transmitted_ray, recursion_level - 1);
+
       if (keep_log) refracted->log.insert(refracted->log.begin(),
        "  Iteration type: Refraction");
 
@@ -282,18 +274,4 @@ shared_ptr<Path> recursive_ray_lighting(shared_ptr<Scene> scene,
        transmission_contrib));
    }
    return result;
-}
-
-shared_ptr<Path> ray_lighting(shared_ptr<Scene> scene, vec3 source,
- vec3 destination, LightingMode lighting_mode, const bool use_fresnel,
- const bool use_gi, bool keep_log) {
-   shared_ptr<Ray> ray = make_shared<Ray>(source, destination - source, 0, -1);
-   return ray_lighting(scene, ray, lighting_mode, use_fresnel, use_gi, keep_log);
-}
-
-shared_ptr<Path> ray_lighting(shared_ptr<Scene> scene, shared_ptr<Ray> ray,
- LightingMode lighting_mode, const bool use_fresnel, const bool use_gi,
- bool keep_log) {
-   return recursive_ray_lighting(scene, ray, lighting_mode,
-    MAX_LIGHT_BOUNCES, use_fresnel, use_gi, keep_log);
 }

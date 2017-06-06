@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <lighting/lighting.hpp>
+#include <lighting/renderer.hpp>
 #include <rays/intersection.hpp>
 #include <rays/path.hpp>
 #include <scene/scene.hpp>
@@ -226,6 +226,8 @@ int execute(const char *mode, const Scene &scene, const int width,
 int render(const Scene &scene, const bool use_alt_brdf, const int ss,
  const bool fresnel, const bool gi) {
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
+   Renderer renderer(make_shared<Scene>(scene), lighting_mode, fresnel, gi,
+      false);
 
    unsigned char *data = new unsigned char[scene.camera->width *
     scene.camera->height * 3];
@@ -243,9 +245,7 @@ int render(const Scene &scene, const bool use_alt_brdf, const int ss,
             for (int n = 0; n < ss; ++n) {
                shared_ptr<Ray> ray = scene.camera->make_ray(x, y, m, n, ss);
 
-               pixel_color = pixel_color +
-                ray_lighting(make_shared<Scene>(scene), ray,
-                lighting_mode, fresnel, gi, false)->color;
+               pixel_color = pixel_color + renderer.render_ray(ray)->color;
             }
          }
 
@@ -326,8 +326,11 @@ int pixelcolor(const Scene &scene, const int x, const int y,
    shared_ptr<Intersection> intersection = scene.cast_ray(ray);
 
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
-   RGBColor color = ray_lighting(make_shared<Scene>(scene), ray->source,
-    intersection->intersection_point, lighting_mode, fresnel, false, true)->color;
+   Renderer renderer(make_shared<Scene>(scene), lighting_mode, fresnel, false,
+      true);
+
+   RGBColor color = renderer.render_ray(ray->source,
+      intersection->intersection_point)->color;
 
    cout << "Pixel: [" << x << ", " << y << "] Ray: ";
    print_vec3(ray->source);
@@ -367,8 +370,10 @@ int pixeltrace(const Scene &scene, const int x, const int y,
  const bool use_alt_brdf, const bool fresnel) {
    shared_ptr<Ray> ray = scene.camera->make_ray(x, y);
    LightingMode lighting_mode = use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
-   shared_ptr<Path> path = ray_lighting(make_shared<Scene>(scene), ray,
-    lighting_mode, fresnel, false, true);
+   Renderer renderer(make_shared<Scene>(scene), lighting_mode, fresnel, false, true);
+
+   shared_ptr<Path> path = renderer.render_ray(ray);
+   
    path->log.insert(path->log.begin(), "  Iteration type: Primary");
 
    cout << "Pixel: [" << x << ", " << y << "] Color: ("
