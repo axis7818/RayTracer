@@ -100,10 +100,9 @@ RGBColor Renderer::monte_carlo_gi(shared_ptr<Intersection> intersection,
 
    RGBColor ambient = RGBColor(0, 0, 0);
 
-   for (size_t i = 0; i < count; ++i) {
-      vec4 random_point = vec4(generate_cos_weighted_point(), 1.0f);
-
-      vec3 cast_dir = vec3(rot_matrix * random_point);
+   vector<vec3> random_points = get_hemisphere_points(count);
+   for (vec3 random_point : random_points) {
+      vec3 cast_dir = vec3(rot_matrix * vec4(random_point, 1.0f));
       vec3 start_point = intersection->intersection_point + 0.001f * cast_dir;
       shared_ptr<Ray> cast_ray = make_shared<Ray>(start_point, cast_dir, 0, -1);
 
@@ -113,7 +112,6 @@ RGBColor Renderer::monte_carlo_gi(shared_ptr<Intersection> intersection,
       color /= (float)count;
       float weight = dot(cast_dir, normal);
       ambient += color * weight;
-
    }
 
    ambient.saturate();
