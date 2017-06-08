@@ -47,7 +47,8 @@ void print_path(shared_ptr<Path> path, int level) {
 void print_path(shared_ptr<Path> path) {
    print_path(path, 0);
    cout << endl << endl;
-   cout << "--------------------------------------------------------------------------------" << endl << endl;
+   cout << "-------------------------------------"
+      << "-------------------------------------------" << endl << endl;
 }
 
 void print_mat4(const mat4 &m) {

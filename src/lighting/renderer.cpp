@@ -89,100 +89,34 @@ vec3 beers_law(vec3 color, float distance) {
 RGBColor Renderer::monte_carlo_gi(shared_ptr<Intersection> intersection,
       const int count, const int recursion_level) {
 
-   // bool print = count == 32;
-   bool print = false;
-
    vec3 up = vec3(0, 0, 1);
-   if (print) {
-      cout << "-------- count: " << count << endl;
-      cout << "shape: " << intersection->target->get_type() << endl;
-      cout << "up: ";
-      print_vec3(up, 5);
-      cout << endl;
-   }
-
    vec3 normal = intersection->normal;
-   if (print) {
-      cout << "normal: ";
-      print_vec3(normal, 5);
-      cout << endl;
-   }
-
    float angle = acos(dot(up, normal));
-   if (print)
-      cout << "angle: " << angle << endl;
-
    vec3 axis = cross(up, normal);
-   if (print) {
-      cout << "axis: ";
-      print_vec3(axis, 5);
-      cout << endl;
-   }
-
    mat4 rot_matrix = mat4(1.0f);
-
    if (axis.x != 0 || axis.y != 0 || axis.z != 0) {
       rot_matrix = glm::rotate(mat4(1.0f), angle, axis);
    }
-
-   if (print) {
-      cout << "transform matrix" << endl;
-      print_mat4(rot_matrix);
-   }
-
 
    RGBColor ambient = RGBColor(0, 0, 0);
 
    for (size_t i = 0; i < count; ++i) {
       vec4 random_point = vec4(generate_cos_weighted_point(), 1.0f);
-      if (print) {
 
-         cout << "---- random point: ";
-         print_vec3(vec3(random_point), 5);
-         cout << endl;
-      }
-
-      vec3 cast_point = vec3(rot_matrix * random_point);
-      if (print) {
-         cout << "cast point: ";
-         print_vec3(vec3(cast_point), 5);
-         cout << endl;
-      }
-
-      vec3 cast_dir = cast_point - intersection->intersection_point;
+      vec3 cast_dir = vec3(rot_matrix * random_point);
       vec3 start_point = intersection->intersection_point + 0.001f * cast_dir;
-      shared_ptr<Ray> cast_ray = make_shared<Ray>(start_point,
-         cast_point, 0, -1);
+      shared_ptr<Ray> cast_ray = make_shared<Ray>(start_point, cast_dir, 0, -1);
 
       RGBColor color =
          recursive_render_ray(cast_ray, recursion_level - 1)->color;
-      if (print) {
-         cout << "color: ";
-         print_vec3(color.to_vec3(), 5);
-         cout << endl;
-      }
 
-      float weight = dot(cast_point, normal);
-      if (print) {
-         cout << "weight: " << weight << endl;
-         if (weight < 0) {
-            cout << "THERE IS SOME SKETCHY SHIT GOING ON" << endl;
-         }
-      }
-
+      color /= (float)count;
+      float weight = dot(cast_dir, normal);
       ambient += color * weight;
 
    }
 
    ambient.saturate();
-   // ambient *= 0.5f;
-
-   if (print) {
-      cout << "ambient: ";
-      print_vec3(ambient.to_vec3());
-      cout << endl;
-   }
-
    return ambient;
 }
 

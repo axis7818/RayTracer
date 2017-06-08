@@ -104,7 +104,7 @@ int get_ss(int argc, char **argv) {
 }
 
 int get_gi_samples(int argc, char **argv) {
-   int samples = 64;
+   int samples = 128;
 
    for (size_t i = 0; i < argc; ++i) {
       if (!strncmp(GI_SAMPLES_FLAG, argv[i], 12)) {
@@ -128,7 +128,7 @@ int get_gi_bounces(int argc, char **argv) {
 }
 
 int get_gi_ratio(int argc, char **argv) {
-   int ratio = 4;
+   int ratio = 8;
 
    for (size_t i = 0; i < argc; ++i) {
       if (!strncmp(GI_RATIO_FLAG, argv[i], 10)) {
