@@ -37,6 +37,9 @@ public:
    bool use_fresnel;
    bool use_bvh;
    bool use_gi;
+   int gi_samples;
+   int gi_bounces;
+   int gi_ratio;
 
 };
 

@@ -103,6 +103,42 @@ int get_ss(int argc, char **argv) {
    return ss;
 }
 
+int get_gi_samples(int argc, char **argv) {
+   int samples = 64;
+
+   for (size_t i = 0; i < argc; ++i) {
+      if (!strncmp(GI_SAMPLES_FLAG, argv[i], 12)) {
+         samples = atoi(argv[i] + 12);
+      }
+   }
+
+   return samples;
+}
+
+int get_gi_bounces(int argc, char **argv) {
+   int bounces = 2;
+
+   for (size_t i = 0; i < argc; ++i) {
+      if (!strncmp(GI_BOUNCES_FLAG, argv[i], 12)) {
+         bounces = atoi(argv[i] + 12);
+      }
+   }
+
+   return bounces;
+}
+
+int get_gi_ratio(int argc, char **argv) {
+   int ratio = 4;
+
+   for (size_t i = 0; i < argc; ++i) {
+      if (!strncmp(GI_RATIO_FLAG, argv[i], 10)) {
+         ratio = atoi(argv[i] + 10);
+      }
+   }
+
+   return ratio;
+}
+
 bool use_fresnel(int argc, char **argv) {
    for (size_t i = 0; i < argc; ++i)
       if (!strcmp(FRESNEL_FLAG, argv[i]))
@@ -152,6 +188,9 @@ int prepare_execute(const char *mode, int argc, char **argv) {
          scene->use_fresnel = use_fresnel(argc, argv);
          scene->use_bvh = using_bvh(argc, argv);
          scene->use_gi = using_gi(argc, argv);
+         scene->gi_samples = get_gi_samples(argc, argv);
+         scene->gi_bounces = get_gi_bounces(argc, argv);
+         scene->gi_ratio = get_gi_ratio(argc, argv);
 
          scene->build_shapes_from_actors();
       } catch (ParsingException &pe) {
@@ -349,6 +388,11 @@ int pixelcolor(const Scene &scene, const int x, const int y) {
       is_geometry = true;
    } else if (intersection->target->get_type() == "Plane") {
       cout << "Plane" << endl;
+      is_geometry = true;
+   } else if (intersection->target->get_type() == "Triangle") {
+      cout << "Triangle" << endl;
+      is_geometry = true;
+   } else if (intersection->target->get_type() == "AABox") {
       is_geometry = true;
    }
 

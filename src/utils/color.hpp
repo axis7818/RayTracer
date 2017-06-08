@@ -31,10 +31,22 @@ struct RGBColor {
       return result;
    }
 
+   void operator +=(const RGBColor &other) {
+      this->r += other.r;
+      this->g += other.g;
+      this->b += other.b;
+   }
+
    void operator /=(const float &div) {
       this->r /= div;
       this->g /= div;
       this->b /= div;
+   }
+
+   void operator *=(const float &mul) {
+      this->r *= mul;
+      this->g *= mul;
+      this->b *= mul;
    }
 
    float r;

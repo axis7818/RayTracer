@@ -22,9 +22,6 @@
 #define USE_REFLECTIONS true
 #define USE_REFRACTIONS true
 
-#define GI_COUNT_FIRST_BOUNCE 128
-#define GI_COUNT_SECOND_BOUNCE 32
-
 enum LightingMode { BLINN_PHONG, COOK_TORRANCE };
 
 class Renderer {
@@ -38,6 +35,10 @@ public:
    LightingMode lighting_mode;
    bool keep_log;
 
+   int gi_samples;
+   int gi_bounces;
+   int gi_ratio;
+
 private:
 
    std::shared_ptr<Path> recursive_render_ray(std::shared_ptr<Ray> ray,
@@ -48,7 +49,7 @@ private:
    RGBColor local_shading(std::shared_ptr<Intersection> intersection,
       int gi_count, glm::vec3 &ambient, glm::vec3 &diffuse,
       glm::vec3 &specular, const int recursion_level);
-   glm::vec3 monte_carlo_gi(std::shared_ptr<Intersection> intersection,
+   RGBColor monte_carlo_gi(std::shared_ptr<Intersection> intersection,
       const int count, const int recursion_level);
 
 };
