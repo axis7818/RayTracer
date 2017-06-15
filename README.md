@@ -1,6 +1,8 @@
 # RayTracer
 Class assignment for CPE 473
 
+![](website/images/solar_system_big.png)
+
 ## Software Design
 
 One componet of my ray tracer project that I am particularly proud of was my implementation of a BVH (Bounding Volume Hierarchy). I took advantage of a software design pattern called the [Composite Pattern](https://en.wikipedia.org/wiki/Composite_pattern) that let me easily add support for this spatial data structure.
