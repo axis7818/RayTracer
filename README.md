@@ -31,6 +31,15 @@ The Monte Carlo ambient lighting technique already provides a mechanism for cast
 
 The reason that this works is because when a hemisphere of random rays are cast where two objects are close together, many of these rays will intersect with another object. This reduces the ambient contribution to local shading and provides a good approximation of shadows.
 
+### Examples
+
+Below are some examples of the same image with and without ambient occlusion and monte carlo global illumination.
+
+|Neither | GI | AO | Both |
+|---|---|---|---|
+|![](website/images/my_ao.png)|![](website/images/my_ao_gi.png)|![](website/images/my_ao_ao.png)|![](website/images/my_ao_giao.png)|
+|![](website/images/simple_ao.png)|![](website/images/simple_ao_gi.png)|![](website/images/simple_ao_ao.png)|![](website/images/simple_ao_giao.png)|
+
 ### Resources for Implementing Ambient Occlusion
 
 1. [renderWiki](http://joomla.renderwiki.com/joomla/index.php?option=com_content&view=article&id=140&Itemid=157)
