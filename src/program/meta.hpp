@@ -20,6 +20,7 @@
 #define GI_SAMPLES_FLAG "-gi_samples="
 #define GI_BOUNCES_FLAG "-gi_bounces="
 #define GI_RATIO_FLAG "-gi_ratio="
+#define AO_FLAG "-ao"
 
 static const unsigned int mode_count = 5;
 static const char *mode_names[] = {

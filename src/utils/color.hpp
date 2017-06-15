@@ -14,6 +14,7 @@ struct RGBColor {
    void from_vec3(glm::vec3 v) { r=v.x; g=v.y; b=v.z; }
 
    void saturate();
+   bool is_black();
 
    RGBColor operator +(const RGBColor &other) {
       RGBColor result;

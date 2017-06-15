@@ -16,6 +16,7 @@ public:
    std::shared_ptr<Path> reflected;
    std::shared_ptr<Path> refracted;
    float distance;
+   bool hit = false;
 };
 
 #endif /* end of include guard: _PATH_HPP */

@@ -103,6 +103,13 @@ int get_ss(int argc, char **argv) {
    return ss;
 }
 
+bool using_ao(int argc, char **argv) {
+   for (size_t i = 0; i < argc; ++i)
+      if (!strcmp(AO_FLAG, argv[i]))
+         return true;
+   return false;
+}
+
 int get_gi_samples(int argc, char **argv) {
    int samples = 128;
 
@@ -191,6 +198,7 @@ int prepare_execute(const char *mode, int argc, char **argv) {
          scene->gi_samples = get_gi_samples(argc, argv);
          scene->gi_bounces = get_gi_bounces(argc, argv);
          scene->gi_ratio = get_gi_ratio(argc, argv);
+         scene->use_ao = using_ao(argc, argv);
 
          scene->build_shapes_from_actors();
       } catch (ParsingException &pe) {

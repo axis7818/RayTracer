@@ -7,6 +7,7 @@ Renderer::Renderer(shared_ptr<Scene> scene, bool keep_log) :
    scene(scene), keep_log(keep_log)
 {
    lighting_mode = scene->use_alt_brdf ? COOK_TORRANCE : BLINN_PHONG;
+
    this->gi_samples = scene->gi_samples;
    this->gi_ratio = scene->gi_ratio;
    this->gi_bounces = scene->gi_bounces;
@@ -99,6 +100,7 @@ RGBColor Renderer::monte_carlo_gi(shared_ptr<Intersection> intersection,
    }
 
    RGBColor ambient = RGBColor(0, 0, 0);
+   int hit_count = 0;
 
    vector<vec3> random_points = get_hemisphere_points(count);
    for (vec3 random_point : random_points) {
@@ -106,15 +108,26 @@ RGBColor Renderer::monte_carlo_gi(shared_ptr<Intersection> intersection,
       vec3 start_point = intersection->intersection_point + 0.001f * cast_dir;
       shared_ptr<Ray> cast_ray = make_shared<Ray>(start_point, cast_dir, 0, -1);
 
-      RGBColor color =
-         recursive_render_ray(cast_ray, recursion_level - 1)->color;
+      shared_ptr<Path> cast_result =
+         recursive_render_ray(cast_ray, recursion_level - 1);
 
-      color /= (float)count;
+      RGBColor color = cast_result->color;
+
+      if (cast_result->hit) {
+         ++hit_count;
+      }
+
+      if (this->scene->use_gi) {
+         color /= (float)count;
+      }
       float weight = dot(cast_dir, normal);
       ambient += color * weight;
    }
 
    ambient.saturate();
+   if (this->scene->use_ao && hit_count) {
+      ambient /= (float)hit_count;
+   }
    return ambient;
 }
 
@@ -152,9 +165,8 @@ RGBColor Renderer::local_shading(shared_ptr<Intersection> intersection,
 
    // 3 lighting components
    ambient = k_a * obj_color;
-   if (gi_count >= 1) {
-      ambient = monte_carlo_gi(intersection, gi_count, recursion_level)
-         .to_vec3();
+   if ((scene->use_gi || scene->use_ao) && gi_count >= 1) {
+      ambient = monte_carlo_gi(intersection, gi_count, recursion_level).to_vec3();
    }
    diffuse = vec3(0, 0, 0);
    specular = vec3(0, 0, 0);
@@ -197,7 +209,6 @@ RGBColor Renderer::local_shading(shared_ptr<Intersection> intersection,
 
    // combine the color components
    return RGBColor(ambient + diffuse + specular);
-
 }
 
 shared_ptr<Path> Renderer::render_ray(shared_ptr<Ray> ray) {
@@ -240,7 +251,7 @@ shared_ptr<Path> Renderer::recursive_render_ray(shared_ptr<Ray> ray,
    vec3 loc_a, loc_d, loc_s;
    int gi_count = 0;
    int bounce = MAX_LIGHT_BOUNCES - recursion_level;
-   if (scene->use_gi && bounce < gi_bounces) {
+   if ((scene->use_gi || scene->use_ao) && bounce < gi_bounces) {
       gi_count = (int)((float)gi_samples / pow(gi_ratio, bounce));
    }
    RGBColor local_color = local_shading(intersection, gi_count, loc_a, loc_d,
@@ -308,5 +319,6 @@ shared_ptr<Path> Renderer::recursive_render_ray(shared_ptr<Ray> ray,
       result->log.push_back(contrib_string(local_contrib, reflection_contrib,
        transmission_contrib));
    }
+   result->hit = true;
    return result;
 }

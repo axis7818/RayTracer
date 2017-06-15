@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+   <head>
+      <title>CPE 473 Ray Tracer</title>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+   </head>
+   <body>
+      <div class="container" style="margin-bottom: 5em;">
+
+         <h1>Ray Tracer Ambient Occlusion</h1>
+         <em>Cameron Taylor</em><br>
+         <em>Cal Poly Spring 2017 CPE 473</em>
+         <hr>
+
+         <div class="row">
+
+           <div class="col-xs-12">
+             <img src="./images/solar_system_big.png" alt="" class="img-responsive">
+           </div>
+
+         </div>
+
+         <div class="row">
+           <div class="col-xs-12">
+             <h2>Final Project: Ambient Occlusion</h2>
+             <p>
+               Ambient occlusion is a technique for approximating shadows when determining the ambient light component for local shading. This is done by casting several rays in a hemisphere around the normal from a incident ray's intersection point. The ambient light component is then divided by the number of these rays that actually intersect something in the scene.
+             </p>
+
+             <p>The Monte Carlo ambient lighting technique already provides a mechanism for casting these rays in a hemisphere, so I leveraged that code. The only modification was simply counting the number of these rays that hit another object. I then divided the ambient lighting component by this count.</p>
+
+             <p>
+               The reason that this works is because when a hemisphere of random rays are cast where two objects are close together, many of these rays will intersect with another object. This reduces the ambient contribution to local shading and provides a good approximation of shadows.
+             </p>
+           </div>
+         </div>
+
+         <div class="row">
+
+           <div class="col-xs-12">
+
+             <h2>Examples</h2>
+
+             <p>Below are some examples of the same image with and without ambient occlusion and monte carlo global illumination.</p>
+           </div>
+
+          <div class="col-xs-12 col-sm-6 col-md-3">
+            <h4>No Ambient Occlusion or Global Illuminaiton</h4>
+            <img src="./images/my_ao.png" alt="" class="img-responsive">
+          </div>
+          <div class="col-xs-12 col-sm-6 col-md-3">
+            <h4>Global Illuminaiton, no Ambient Occlusion</h4>
+            <img src="./images/my_ao_gi.png" alt="" class="img-responsive">
+          </div>
+          <div class="col-xs-12 col-sm-6 col-md-3">
+            <h4>Ambient Occlusion, no Global Illuminaiton</h4>
+            <img src="./images/my_ao_ao.png" alt="" class="img-responsive">
+          </div>
+          <div class="col-xs-12 col-sm-6 col-md-3">
+            <h4>Ambient Occlusion and Global Illuminaiton</h4>
+            <img src="./images/my_ao_giao.png" alt="" class="img-responsive">
+          </div>
+
+          <div class="col-xs-12">
+            <p>and here with some colors...</p>
+          </div>
+          <div class="col-xs-12 col-sm-6 col-md-3">
+            <h4>No Ambient Occlusion or Global Illuminaiton</h4>
+            <img src="./images/simple_ao.png" alt="" class="img-responsive">
+          </div>
+          <div class="col-xs-12 col-sm-6 col-md-3">
+            <h4>Global Illuminaiton, no Ambient Occlusion</h4>
+            <img src="./images/simple_ao_gi.png" alt="" class="img-responsive">
+          </div>
+          <div class="col-xs-12 col-sm-6 col-md-3">
+            <h4>Ambient Occlusion, no Global Illuminaiton</h4>
+            <img src="./images/simple_ao_ao.png" alt="" class="img-responsive">
+          </div>
+          <div class="col-xs-12 col-sm-6 col-md-3">
+            <h4>Ambient Occlusion and Global Illuminaiton</h4>
+            <img src="./images/simple_ao_giao.png" alt="" class="img-responsive">
+          </div>
+
+         </div>
+
+         <div class="row">
+           <div class="col-xs-12">
+             <h2>Resources</h2>
+             <ol>
+               <li>
+                 <a href="http://joomla.renderwiki.com/joomla/index.php?option=com_content&view=article&id=140&Itemid=157">renderWiki</a>
+               </li>
+               <li>
+                 <a href="https://en.wikipedia.org/wiki/Ambient_occlusion">wikipedia</a>
+               </li>
+               <li>
+                 <a href="http://www.fundza.com/rman_shaders/ray/ambient_occlusion/index.html">fundza.com</a>
+               </li>
+             </ol>
+           </div>
+         </div>
+
+      </div>
+   </body>
+</html>
